@@ -429,7 +429,7 @@ class Db implements \WP_Framework_Core\Interfaces\Singleton, \WP_Framework_Core\
 					$columns = [ $columns ];
 				}
 				$columns = implode( ', ', $columns );
-				$index[] = "INDEX {$name} ({$columns})";
+				$index[] = "KEY {$name} ({$columns})";
 			}
 		}
 		if ( ! empty( $define['index']['unique'] ) ) {
