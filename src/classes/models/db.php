@@ -136,18 +136,27 @@ class Db implements \WP_Framework_Core\Interfaces\Singleton, \WP_Framework_Core\
 	}
 
 	/**
+	 * @return \wpdb
+	 */
+	public function get_db() {
+		/** @var \wpdb $wpdb */
+		global $wpdb;
+
+		return $wpdb;
+	}
+
+	/**
 	 * for wp table
 	 */
 	private function setup_wp_table_defines() {
-		/** @var \wpdb $wpdb */
-		global $wpdb, $wp_version;
+		global $wp_version;
 		$current_blog_id = get_current_blog_id();
 		$tables          = $this->apply_filters( 'allowed_wp_tables', [
-			$wpdb->posts    => $wpdb->posts,
-			$wpdb->postmeta => $wpdb->postmeta,
-			$wpdb->users    => $wpdb->users,
-			$wpdb->usermeta => $wpdb->usermeta,
-			$wpdb->options  => $wpdb->options,
+			$this->get_db()->posts    => $this->get_db()->posts,
+			$this->get_db()->postmeta => $this->get_db()->postmeta,
+			$this->get_db()->users    => $this->get_db()->users,
+			$this->get_db()->usermeta => $this->get_db()->usermeta,
+			$this->get_db()->options  => $this->get_db()->options,
 		], $current_blog_id );
 
 		$changed       = false;
@@ -164,7 +173,7 @@ class Db implements \WP_Framework_Core\Interfaces\Singleton, \WP_Framework_Core\
 			} else {
 				$changed      = true;
 				$sql          = "DESCRIBE $table";
-				$columns      = $wpdb->get_results( $sql, ARRAY_A );
+				$columns      = $this->get_db()->get_results( $sql, ARRAY_A );
 				$table_define = [];
 				foreach ( $columns as $column ) {
 					$name = $column['Field'];
@@ -964,11 +973,9 @@ class Db implements \WP_Framework_Core\Interfaces\Singleton, \WP_Framework_Core\
 			return false;
 		}
 
-		/** @var \wpdb $wpdb */
-		global $wpdb;
 		! isset( $output ) and $output = ARRAY_A;
 
-		return $wpdb->get_results( $sql, $output );
+		return $this->get_db()->get_results( $sql, $output );
 	}
 
 	/**
@@ -989,11 +996,9 @@ class Db implements \WP_Framework_Core\Interfaces\Singleton, \WP_Framework_Core\
 			return false;
 		}
 
-		/** @var \wpdb $wpdb */
-		global $wpdb;
 		! isset( $output ) and $output = ARRAY_A;
 
-		return $wpdb->get_row( $sql, $output );
+		return $this->get_db()->get_row( $sql, $output );
 	}
 
 	/**
@@ -1041,34 +1046,26 @@ class Db implements \WP_Framework_Core\Interfaces\Singleton, \WP_Framework_Core\
 			return false;
 		}
 
-		/** @var \wpdb $wpdb */
-		global $wpdb;
 		$columns = $this->table_defines[ $table ]['columns'];
 
 		$data = $this->set_update_params( $data, $method === 'insert', true, false );
 		list ( $_data, $_format ) = $this->filter( $data, $columns );
 
-		return $wpdb->$method( $this->get_table( $table ), $_data, $_format );
+		return $this->get_db()->$method( $this->get_table( $table ), $_data, $_format );
 	}
 
 	/**
 	 * @return int
 	 */
 	public function get_insert_id() {
-		/** @var \wpdb $wpdb */
-		global $wpdb;
-
-		return $wpdb->insert_id;
+		return $this->get_db()->insert_id;
 	}
 
 	/**
 	 * @return string
 	 */
 	public function get_last_error() {
-		/** @var \wpdb $wpdb */
-		global $wpdb;
-
-		return $wpdb->last_error;
+		return $this->get_db()->last_error;
 	}
 
 	/**
@@ -1155,8 +1152,6 @@ class Db implements \WP_Framework_Core\Interfaces\Singleton, \WP_Framework_Core\
 			return false;
 		}
 
-		/** @var \wpdb $wpdb */
-		global $wpdb;
 		$columns = $this->table_defines[ $table ]['columns'];
 
 		if ( $this->is_logical( $this->table_defines[ $table ] ) ) {
@@ -1167,7 +1162,7 @@ class Db implements \WP_Framework_Core\Interfaces\Singleton, \WP_Framework_Core\
 		list ( $_data, $_format ) = $this->filter( $data, $columns );
 		list ( $_where, $_where_format ) = $this->filter( $where, $columns );
 
-		return $wpdb->update( $this->get_table( $table ), $_data, $_where, $_format, $_where_format );
+		return $this->get_db()->update( $this->get_table( $table ), $_data, $_where, $_format, $_where_format );
 	}
 
 	/**
@@ -1221,13 +1216,11 @@ class Db implements \WP_Framework_Core\Interfaces\Singleton, \WP_Framework_Core\
 			return $this->update( $table, $data, $where );
 		}
 
-		/** @var \wpdb $wpdb */
-		global $wpdb;
 		$columns = $this->table_defines[ $table ]['columns'];
 
 		list ( $_where, $_where_format ) = $this->filter( $where, $columns );
 
-		return $wpdb->delete( $this->get_table( $table ), $_where, $_where_format );
+		return $this->get_db()->delete( $this->get_table( $table ), $_where, $_where_format );
 	}
 
 	/**
@@ -1255,10 +1248,7 @@ class Db implements \WP_Framework_Core\Interfaces\Singleton, \WP_Framework_Core\
 	 * @return false|int
 	 */
 	public function query( $sql ) {
-		/** @var \wpdb $wpdb */
-		global $wpdb;
-
-		return $wpdb->query( $sql );
+		return $this->get_db()->query( $sql );
 	}
 
 	/**
@@ -1268,10 +1258,7 @@ class Db implements \WP_Framework_Core\Interfaces\Singleton, \WP_Framework_Core\
 	 * @return string
 	 */
 	public function prepare( $sql, array $values ) {
-		/** @var \wpdb $wpdb */
-		global $wpdb;
-
-		return empty( $values ) ? $sql : $wpdb->prepare( $sql, $values );
+		return empty( $values ) ? $sql : $this->get_db()->prepare( $sql, $values );
 	}
 
 	/**
