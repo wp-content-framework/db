@@ -244,7 +244,9 @@ class Db implements \WP_Framework_Core\Interfaces\Singleton, \WP_Framework_Core\
 			}
 
 			$column['name']   = $this->app->utility->array_get( $column, 'name', $key );
-			$column['format'] = $this->app->utility->array_get( $column, 'format', $this->type2format( $type ) );
+			$column['format'] = $this->app->utility->array_get( $column, 'format', function () use ( $type ) {
+				return $this->type2format( $type );
+			} );
 			$column['length'] = null;
 			if ( preg_match( '/\(\s*(\d+)\s*\)/', $type, $matches ) ) {
 				$column['length'] = $matches[1] - 0;
@@ -342,7 +344,7 @@ class Db implements \WP_Framework_Core\Interfaces\Singleton, \WP_Framework_Core\
 	 * @return string
 	 */
 	public function get_field( $table, $key ) {
-		return $this->app->utility->array_get( $this->app->utility->array_get( $this->get_columns( $table ), $key, [] ), 'name', $key );
+		return $this->app->utility->array_get( $this->get_columns( $table ), "{$key}.name", $key );
 	}
 
 	/**
@@ -499,7 +501,9 @@ class Db implements \WP_Framework_Core\Interfaces\Singleton, \WP_Framework_Core\
 	 * @return bool
 	 */
 	private function is_logical( array $define ) {
-		return $this->apply_filters( 'is_logical', 'physical' !== $this->app->utility->array_get( $define, 'delete', $this->app->get_config( 'config', 'default_delete_rule' ) ), $define );
+		return $this->apply_filters( 'is_logical', 'physical' !== $this->app->utility->array_get( $define, 'delete', function () {
+				return $this->app->get_config( 'config', 'default_delete_rule' );
+			} ), $define );
 	}
 
 	/**
