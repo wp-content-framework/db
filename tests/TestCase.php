@@ -1,6 +1,6 @@
 <?php
 /**
- * WP_Framework_Db Models Define Test
+ * WP_Framework_Db TestCase
  *
  * @version 0.0.10
  * @author Technote
@@ -44,6 +44,7 @@ class TestCase extends \PHPUnit\Framework\TestCase {
 		\Phake::when( static::$app )->has_initialized()->thenReturn( true );
 		\Phake::when( static::$app )->is_enough_version()->thenReturn( true );
 		\Phake::when( static::$app )->get_packages()->thenReturn( [] );
+		\Phake::when( static::$app )->get_config( 'deprecated' )->thenReturn( [ '\WP_Framework_Db\Classes\Models\Db' => '\WP_Framework_Db\Deprecated\Classes\Models\Db' ] );
 		static::$plugin_name = md5( uniqid() );
 		static::$plugin_file = __FILE__;
 		static::$plugin_dir  = dirname( __FILE__ );
@@ -54,6 +55,12 @@ class TestCase extends \PHPUnit\Framework\TestCase {
 		\Phake::when( static::$app )->__get( 'define' )->thenReturn( \WP_Framework_Common\Classes\Models\Define::get_instance( static::$app ) );
 		\Phake::when( static::$app )->__get( 'input' )->thenReturn( \WP_Framework_Common\Classes\Models\Input::get_instance( static::$app ) );
 		\Phake::when( static::$app )->__get( 'utility' )->thenReturn( \WP_Framework_Common\Classes\Models\Utility::get_instance( static::$app ) );
+		\Phake::when( static::$app )->__get( 'array' )->thenReturn( \WP_Framework_Common\Classes\Models\Array_Utility::get_instance( static::$app ) );
 		\Phake::when( static::$app )->__get( 'user' )->thenReturn( \WP_Framework_Common\Classes\Models\User::get_instance( static::$app ) );
+		\Phake::when( static::$app )->__get( 'deprecated' )->thenReturn( \WP_Framework_Common\Classes\Models\Deprecated::get_instance( static::$app ) );
+	}
+
+	public static function tearDownAfterClass() {
+		static::$app->user->uninstall();
 	}
 }
