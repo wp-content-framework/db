@@ -29,6 +29,7 @@ class DbTest extends \WP_Framework_Db\Tests\TestCase {
 	public static function setUpBeforeClass() {
 		parent::setUpBeforeClass();
 		static::$_db = Misc\Db::get_instance( static::$app );
+		\Phake::when( static::$app )->__get( 'db' )->thenReturn( static::$_db );
 		static::$_db->drop( 'technote_test_table1' );
 		static::$_db->drop( 'technote_test_table2' );
 		static::$_db->setup( 'technote_test_table1', [
@@ -220,6 +221,23 @@ class DbTest extends \WP_Framework_Db\Tests\TestCase {
 			'value3' => 'text2',
 			'value4' => 2,
 		] ) );
+
+		$this->assertEquals( 2, static::$_db->builder()->table( 'technote_test_table1' )->insert( [
+			'value1' => 'text10',
+			'value2' => 10,
+			'value3' => 'text30',
+		] ) );
+		$this->assertEquals( 3, static::$_db->builder()->table( 'technote_test_table2' )->insert( [
+			'value1' => 100,
+			'value2' => 200,
+			'value3' => 'text10',
+			'value4' => 10,
+		] ) );
+		$this->assertEquals( 4, static::$_db->builder()->table( 'technote_test_table2' )->insert( [
+			'value2' => 100,
+			'value3' => 'text20',
+			'value4' => 20,
+		] ) );
 	}
 
 	/**
@@ -238,6 +256,15 @@ class DbTest extends \WP_Framework_Db\Tests\TestCase {
 		], [
 			'id' => 10,
 		] ) );
+
+		$this->assertEquals( 1, static::$_db->builder()->table( 'technote_test_table2' )->where( 'id', 4 )->update( [
+			'value3' => 'text30',
+			'value4' => 30,
+		] ) );
+		$this->assertEquals( 0, static::$_db->builder()->table( 'technote_test_table2' )->where( 'id', 10 )->update( [
+			'value3' => 'text40',
+			'value4' => 40,
+		] ) );
 	}
 
 	/**
@@ -255,6 +282,13 @@ class DbTest extends \WP_Framework_Db\Tests\TestCase {
 		$this->assertArrayHasKey( 'value4', $result );
 		$this->assertEquals( 'text3', $result['value3'] );
 		$this->assertEquals( 3, $result['value4'] );
+
+		$result = static::$_db->builder()->table( 'technote_test_table2' )->find( 1 );
+		$this->assertArrayHasKey( 'id', $result );
+		$this->assertArrayHasKey( 'value3', $result );
+		$this->assertArrayHasKey( 'value4', $result );
+		$this->assertEquals( 'text3', $result['value3'] );
+		$this->assertEquals( 3, $result['value4'] );
 	}
 
 	/**
@@ -264,6 +298,9 @@ class DbTest extends \WP_Framework_Db\Tests\TestCase {
 		$results = static::$_db->select( 'technote_test_table2', [
 			'id' => 10,
 		] );
+		$this->assertEmpty( $results );
+
+		$results = static::$_db->builder()->table( 'technote_test_table2' )->where( 'id', 10 )->get();
 		$this->assertEmpty( $results );
 	}
 
@@ -284,8 +321,14 @@ class DbTest extends \WP_Framework_Db\Tests\TestCase {
 			'id' => 2,
 		] ) );
 		$this->assertEquals( 0, static::$_db->delete( 'technote_test_table2', [
-			'id' => 3,
+			'id' => 30,
 		] ) );
+
+		$this->assertEquals( 1, static::$_db->builder()->table( 'technote_test_table1' )->delete( 2 ) );
+		$this->assertEquals( false, static::$_db->builder()->table( 'technote_test_table1' )->delete( 2 ) );
+		$this->assertEquals( 1, static::$_db->builder()->table( 'technote_test_table2' )->delete( 3 ) );
+		$this->assertEquals( 1, static::$_db->builder()->table( 'technote_test_table2' )->delete( 4 ) );
+		$this->assertEquals( false, static::$_db->builder()->table( 'technote_test_table2' )->delete( 5 ) );
 	}
 
 	/**
@@ -300,5 +343,10 @@ class DbTest extends \WP_Framework_Db\Tests\TestCase {
 			'id' => 1,
 		] );
 		$this->assertEmpty( $results );
+
+		$results = static::$_db->builder()->table( 'technote_test_table1' )->where( 'id', 1 )->get();
+		$this->assertEmpty( $results );
+		$result = static::$_db->builder()->table( 'technote_test_table2' )->find( 1 );
+		$this->assertNull( $result );
 	}
 }

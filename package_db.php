@@ -34,6 +34,7 @@ class Package_Db extends Package_Base {
 	public function get_configs() {
 		return [
 			'config',
+			'deprecated',
 			'filter',
 			'map',
 			'slug',
