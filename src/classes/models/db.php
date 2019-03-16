@@ -24,11 +24,6 @@ class Db implements \WP_Framework_Core\Interfaces\Singleton, \WP_Framework_Core\
 	use \WP_Framework_Core\Traits\Singleton, \WP_Framework_Core\Traits\Hook, \WP_Framework_Common\Traits\Uninstall, \WP_Framework_Db\Traits\Package;
 
 	/**
-	 * @var string $_check_version
-	 */
-	private $_check_version;
-
-	/**
 	 * @var array $table_defines
 	 */
 	protected $table_defines = null;
@@ -103,7 +98,7 @@ class Db implements \WP_Framework_Core\Interfaces\Singleton, \WP_Framework_Core\
 	 * load table defines
 	 */
 	private function load_table_defines() {
-		$cache = $this->cache_get( 'table_defines', $this->get_check_version() );
+		$cache = $this->cache_get( 'table_defines' );
 		if ( is_array( $cache ) ) {
 			$this->table_defines = $cache;
 
@@ -126,7 +121,7 @@ class Db implements \WP_Framework_Core\Interfaces\Singleton, \WP_Framework_Core\
 			}
 			$added_tables[ $table ] = $table;
 		}
-		$this->cache_set( 'table_defines', $this->table_defines, $this->get_check_version() );
+		$this->cache_set( 'table_defines', $this->table_defines );
 		$this->app->option->set_grouped( 'added_tables', 'db', $added_tables );
 	}
 
@@ -157,7 +152,7 @@ class Db implements \WP_Framework_Core\Interfaces\Singleton, \WP_Framework_Core\
 		], $current_blog_id );
 
 		$changed = false;
-		$cache   = $this->cache_get( 'wp_table_defines', $this->get_check_version(), [] );
+		$cache   = $this->cache_get( 'wp_table_defines', [] );
 		foreach ( $tables as $table ) {
 			if ( isset( $cache[ $table ] ) ) {
 				$table_define = $cache[ $table ];
@@ -193,7 +188,7 @@ class Db implements \WP_Framework_Core\Interfaces\Singleton, \WP_Framework_Core\
 			$this->table_defines[ $table ] = $table_define;
 		}
 		if ( $changed ) {
-			$this->cache_set( 'wp_table_defines', $cache, $this->get_check_version() );
+			$this->cache_set( 'wp_table_defines', $cache );
 		}
 	}
 
@@ -407,14 +402,14 @@ class Db implements \WP_Framework_Core\Interfaces\Singleton, \WP_Framework_Core\
 	 * db update
 	 */
 	private function db_update() {
-		$db_update = $this->cache_get( 'db_update', $this->get_check_version() );
+		$db_update = $this->cache_get( 'db_update' );
 		if ( $db_update ) {
 			return;
 		}
 
 		$this->do_framework_action( 'start_db_update' );
 		$this->transaction( function () {
-			$this->cache_set( 'db_update', true, $this->get_check_version() );
+			$this->cache_set( 'db_update', true );
 			set_time_limit( 60 * 5 );
 			foreach ( $this->table_defines as $table => $define ) {
 				$results = $this->table_update( $table, $define );
@@ -505,16 +500,6 @@ class Db implements \WP_Framework_Core\Interfaces\Singleton, \WP_Framework_Core\
 		$sql .= ';';
 
 		return dbDelta( $sql );
-	}
-
-	/**
-	 * @return string
-	 */
-	private function get_check_version() {
-		global $wp_version;
-		! isset( $this->_check_version ) and $this->_check_version = $this->app->get_config( 'config', 'db_version', '0.0.0' ) . '/' . $this->app->get_framework_version() . '/' . $wp_version;
-
-		return $this->_check_version;
 	}
 
 	/**
