@@ -2721,7 +2721,9 @@ class Builder {
 			return $this->insert( array_merge( $attributes, $values ) );
 		}
 
-		$this->update( $values );
+		if ( ! empty( $values ) ) {
+			$this->update( $values );
+		}
 
 		return $row['id'];
 	}
