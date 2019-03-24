@@ -35,7 +35,6 @@ class Package_Db extends Package_Base {
 		return [
 			'config',
 			'deprecated',
-			'filter',
 			'map',
 			'slug',
 		];
