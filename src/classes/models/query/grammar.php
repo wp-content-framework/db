@@ -321,36 +321,6 @@ class Grammar extends \WP_Framework_Db\Classes\Models\Grammar {
 	}
 
 	/**
-	 * Compile a where in sub-select clause.
-	 *
-	 * @param  Builder $query
-	 * @param  array $where
-	 *
-	 * @return string
-	 */
-	protected function where_in_sub(
-		/** @noinspection PhpUnusedParameterInspection */
-		Builder $query, $where
-	) {
-		return $this->wrap( $where['column'] ) . ' in (' . $this->compile_select( $where['query'] ) . ')';
-	}
-
-	/**
-	 * Compile a where not in sub-select clause.
-	 *
-	 * @param  Builder $query
-	 * @param  array $where
-	 *
-	 * @return string
-	 */
-	protected function where_not_in_sub(
-		/** @noinspection PhpUnusedParameterInspection */
-		Builder $query, $where
-	) {
-		return $this->wrap( $where['column'] ) . ' not in (' . $this->compile_select( $where['query'] ) . ')';
-	}
-
-	/**
 	 * Compile a "where in raw" clause.
 	 *
 	 * For safety, where_integer_in_raw ensures this method is only used with integer values.
