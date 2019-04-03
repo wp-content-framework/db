@@ -549,7 +549,7 @@ class Db implements \WP_Framework_Core\Interfaces\Singleton, \WP_Framework_Core\
 	 * @return array
 	 */
 	public function set_update_params( array $data, $create, $update, $delete, $table = null ) {
-		$now  = $this->apply_filters( 'set_update_params_date', date_i18n( 'Y-m-d H:i:s' ), $data, $create, $update, $delete );
+		$now  = $this->apply_filters( 'set_update_params_date', $this->date(), $data, $create, $update, $delete );
 		$user = $this->apply_filters( 'set_update_params_user', substr( $this->app->user->user_name, 0, 32 ), $data, $create, $update, $delete );
 
 		$table = $table ? ( $table . '.' ) : '';
