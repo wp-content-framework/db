@@ -39,10 +39,10 @@
         'name'   => array(
             'name'     => 'name_test',     // optional (物理名)
             'type'     => 'VARCHAR(32)',   // required
-            'unsigned' => false,          // optional [default = false]
-            'null'     => true,           // optional [default = true]
-            'default'  => null,           // optional [default = null]
-            'comment'  => '',             // optional
+            'unsigned' => false,           // optional [default = false]
+            'null'     => true,            // optional [default = true]
+            'default'  => null,            // optional [default = null]
+            'comment'  => '',              // optional
         ),
         'value1' => array(
             'type'    => 'VARCHAR(32)',
@@ -75,57 +75,91 @@
     
     // 論理削除 or 物理削除
     'delete'  => 'logical', // physical or logical [default = physical]
+    
+    // コメント
+    'comment' => 'test,
 ),
 ```
 
 設定を更新したら configs/config.php の db_version も更新します。  
 自動でテーブルの追加・更新が行われます。  
-データの取得・挿入・更新・削除は以下のように行います。
+データの取得・挿入・更新・削除はLaravelのDB操作と同じように行うことができます。
 ```
 // 取得
-$this->app->db->select( 'test', array(
-	'id'         => array( 'in', array( 1, 2, 3 ) ),
-	'value1'     => array( 'like', 'tes%' ),
-	'created_at' => array( '<', '2018-06-03' ),
-	'value2'     => null,
-	'value3'     => 3,
-) );
+$this->table( 'test' )
+     ->where_integer_in_raw( 'id', [ 1, 2, 3 ] )
+     ->where( 'value1', 'like', 'tes%' )
+     ->where( 'created_at', '<', '2020-01-01' )
+     ->where_null( 'value2' )
+     ->where( 'value3', 3 )
+     ->get();
 
+// 取得（WordPressのテーブル）
+$this->wp_table( 'posts' )
+     ->where( 'post_type', 'page' )
+     ->order_by( 'post_modified' )
+     ->limit( 10 )
+     ->get();
+
+// 取得（結合）
+$this->table( 'test', 't' )
+     ->alias_join( 'test2', 't2', 't.id', 't2.test_id' )
+     ->alias_join_wp( 'posts', 'p', 't.value3', 'p.ID' )
+     ->where_in( 't.value1', [ 'test1', 'test2', 'test3' ] )
+     ->get();
+
+// 取得（単体）
+$this->table( 'test' )
+     ->where( 'value1', 'test1' )
+     ->row();
+ 
+ // 取得（ID単体）
+$this->table( 'test' )
+     ->find( 10 );
+ 
 // 挿入
-$this->app->db->insert( 'test', array(
-    'name'   => 'aaa',
-    'value1' => 'bbb',
-    'value3' => 100,
-) );
+$this->table( 'test' )
+     ->insert( [
+         'name'   => 'aaa',
+         'value1' => 'bbb',
+         'value3' => 100,
+     ] );
+
+// 挿入（一括）
+$this->table( 'test' )
+     ->insert( [
+         [
+             'name'   => 'aaa1',
+             'value1' => 'bbb1',
+             'value3' => 100,
+         ],
+         [
+             'name'   => 'aaa2',
+             'value1' => 'bbb2',
+             'value3' => 200,
+         ],
+         [
+             'name'   => 'aaa3',
+             'value1' => 'bbb3',
+             'value3' => 300,
+         ],
 
 // 更新
-$this->app->db->update( 'test', array(
-    'value2' => 'ccc',
-), array(
-    'id' => 4,
-) );
+$this->table( 'test' )
+     ->where( 'id', 4 )
+     ->update( [
+         'value2' => 'ccc',
+     ] );
 
 // 削除
-$this->app->db->delete( 'test', array(
-    'id' => 4,
-) );
+$this->table( 'test' )
+     ->where( 'value1', 'test' )
+     ->delete();
+
+// 削除（ID）
+$this->table( 'test' )
+     ->delete( 4 );
 ```
-select 以外は 内部でWordPress標準の関数を使用しているため、  
-条件の指定の仕方は 'key' => 'value' (key = value) のみ可能です。  
-select の条件指定はライブラリ側で構築しており、  
-key = value  
-```
-key' => 'value'
-```
-key in ( val1, val2, val3 )
-```
-'key' => array( 'in', array( val1, val2, val3 ) )  
-```
-key like '%value%'
-```
-'key' => array( 'like', '%value%' )
-```
-などが指定可能です。
 
 # Author
 
