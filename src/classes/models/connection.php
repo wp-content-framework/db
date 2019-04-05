@@ -158,7 +158,7 @@ abstract class Connection {
 	 * @return mixed
 	 */
 	protected function run( $query, $bindings, $callback, $ttl = 0 ) {
-		if ( $this->app->utility->definedv( 'WP_FRAMEWORK_PERFORMANCE_REPORT' ) ) {
+		if ( $this->app->utility->defined( 'WP_FRAMEWORK_PERFORMANCE_REPORT' ) ) {
 			$start = microtime( true ) * 1000;
 
 			$real_query = $this->prepare( $query, $this->prepare_bindings( $bindings ) );
@@ -180,7 +180,7 @@ abstract class Connection {
 			static::$_queries[ $this->app->plugin_name ][ $hash ]['execute'][] = $elapsed;
 
 			if ( $elapsed > 10 * 1000 ) {
-				if ( $this->app->utility->definedv( 'WP_FRAMEWORK_REPORT_SLOW_QUERY' ) ) {
+				if ( $this->app->utility->defined( 'WP_FRAMEWORK_REPORT_SLOW_QUERY' ) ) {
 					$this->app->log( new \Exception( 'slow query detected.' ), [ 'query' => $real_query, 'elapsed ms' => $elapsed ] );
 				}
 			}
