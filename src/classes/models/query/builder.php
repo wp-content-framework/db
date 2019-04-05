@@ -2729,7 +2729,7 @@ class Builder {
 	/**
 	 * Delete a record from the database.
 	 *
-	 * @param  mixed $id
+	 * @param  null|int $id
 	 *
 	 * @return int|false
 	 */
