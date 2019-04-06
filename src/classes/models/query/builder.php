@@ -2564,6 +2564,26 @@ class Builder {
 	 * @param callable $callback
 	 * @param string $id
 	 * @param array $columns
+	 *
+	 * @return bool
+	 */
+	public function each( $number, $callback, $id = 'id', $columns = [ '*' ] ) {
+		return $this->chunk( $number, function ( $results ) use ( $callback ) {
+			foreach ( $results as $key => $value ) {
+				if ( false === $callback( $value, $key ) ) {
+					return false;
+				}
+			}
+
+			return true;
+		}, $id, $columns );
+	}
+
+	/**
+	 * @param int $number
+	 * @param callable $callback
+	 * @param string $id
+	 * @param array $columns
 	 */
 	public function chunk_for_delete( $number, $callback, $id = 'id', $columns = [ '*' ] ) {
 		$this->order_by( $id )->limit( $number );
