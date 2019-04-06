@@ -341,6 +341,25 @@ class DbTest extends \WP_Framework_Db\Tests\TestCase {
 	/**
 	 * @depends test_table_update_define
 	 */
+	public function test_each() {
+		$count = 0;
+		static::$_db->builder()->table( 'technote_test_table2' )->each( 2, function () use ( &$count ) {
+			$count ++;
+		} );
+		$this->assertEquals( 4, $count );
+
+		$count = 0;
+		static::$_db->builder()->table( 'technote_test_table2' )->each( 2, function () use ( &$count ) {
+			$count ++;
+
+			return false;
+		} );
+		$this->assertEquals( 1, $count );
+	}
+
+	/**
+	 * @depends test_table_update_define
+	 */
 	public function test_delete() {
 		$this->assertEquals( 1, static::$_db->delete( 'technote_test_table1', [
 			'id' => 1,
