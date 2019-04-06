@@ -2,7 +2,7 @@
 /**
  * WP_Framework_Db Models Define Test
  *
- * @version 0.0.14
+ * @version 0.0.19
  * @author Technote
  * @copyright Technote All Rights Reserved
  * @license http://www.opensource.org/licenses/gpl-2.0.php GNU General Public License, version 2
@@ -302,6 +302,59 @@ class DbTest extends \WP_Framework_Db\Tests\TestCase {
 
 		$results = static::$_db->builder()->table( 'technote_test_table2' )->where( 'id', 10 )->get();
 		$this->assertEmpty( $results );
+	}
+
+	/**
+	 * @depends test_table_update_define
+	 */
+	public function test_count() {
+		$this->assertEquals( 2, static::$_db->select_count( 'technote_test_table1' ) );
+		$this->assertEquals( 4, static::$_db->select_count( 'technote_test_table2' ) );
+		$this->assertEquals( 1, static::$_db->select_count( 'technote_test_table1', '*', [ 'value2' => 1 ] ) );
+
+		$this->assertEquals( 2, static::$_db->builder()->table( 'technote_test_table1' )->count() );
+		$this->assertEquals( 4, static::$_db->builder()->table( 'technote_test_table2' )->count() );
+		$this->assertEquals( 1, static::$_db->builder()->table( 'technote_test_table1' )->where( 'value2', 1 )->count() );
+	}
+
+	/**
+	 * @depends test_table_update_define
+	 */
+	public function test_chunk() {
+		$count = 0;
+		static::$_db->builder()->table( 'technote_test_table2' )->chunk( 2, function ( $results ) use ( &$count ) {
+			$this->assertCount( 2, $results );
+			$count ++;
+		} );
+		$this->assertEquals( 2, $count );
+
+		$count = 0;
+		static::$_db->builder()->table( 'technote_test_table2' )->chunk( 2, function ( $results ) use ( &$count ) {
+			$this->assertCount( 2, $results );
+			$count ++;
+
+			return false;
+		} );
+		$this->assertEquals( 1, $count );
+	}
+
+	/**
+	 * @depends test_table_update_define
+	 */
+	public function test_each() {
+		$count = 0;
+		static::$_db->builder()->table( 'technote_test_table2' )->each( 2, function () use ( &$count ) {
+			$count ++;
+		} );
+		$this->assertEquals( 4, $count );
+
+		$count = 0;
+		static::$_db->builder()->table( 'technote_test_table2' )->each( 2, function () use ( &$count ) {
+			$count ++;
+
+			return false;
+		} );
+		$this->assertEquals( 1, $count );
 	}
 
 	/**

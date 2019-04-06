@@ -2,7 +2,7 @@
 /**
  * WP_Framework_Db Classes Models Query Builder
  *
- * @version 0.0.18
+ * @version 0.0.19
  * @author Technote
  * @copyright Technote All Rights Reserved
  * @license http://www.opensource.org/licenses/gpl-2.0.php GNU General Public License, version 2
@@ -2539,16 +2539,44 @@ class Builder {
 	 * @param callable $callback
 	 * @param string $id
 	 * @param array $columns
+	 *
+	 * @return bool
 	 */
 	public function chunk( $number, $callback, $id = 'id', $columns = [ '*' ] ) {
 		$this->order_by( $id )->limit( $number )->shared_lock();
-		$this->app->db->transaction( function () use ( $number, $callback, $columns ) {
+		$result = true;
+		$this->app->db->transaction( function () use ( $number, $callback, $columns, &$result ) {
 			$offset = 0;
 			while ( $results = $this->offset( $offset )->get( $columns ) ) {
-				$callback( $results );
+				if ( false === $callback( $results ) ) {
+					$result = false;
+					break;
+				}
 				$offset += $number;
 			}
 		} );
+
+		return $result;
+	}
+
+	/**
+	 * @param int $number
+	 * @param callable $callback
+	 * @param string $id
+	 * @param array $columns
+	 *
+	 * @return bool
+	 */
+	public function each( $number, $callback, $id = 'id', $columns = [ '*' ] ) {
+		return $this->chunk( $number, function ( $results ) use ( $callback ) {
+			foreach ( $results as $key => $value ) {
+				if ( false === $callback( $value, $key ) ) {
+					return false;
+				}
+			}
+
+			return true;
+		}, $id, $columns );
 	}
 
 	/**
