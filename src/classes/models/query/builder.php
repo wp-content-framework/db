@@ -2539,16 +2539,24 @@ class Builder {
 	 * @param callable $callback
 	 * @param string $id
 	 * @param array $columns
+	 *
+	 * @return bool
 	 */
 	public function chunk( $number, $callback, $id = 'id', $columns = [ '*' ] ) {
 		$this->order_by( $id )->limit( $number )->shared_lock();
-		$this->app->db->transaction( function () use ( $number, $callback, $columns ) {
+		$result = true;
+		$this->app->db->transaction( function () use ( $number, $callback, $columns, &$result ) {
 			$offset = 0;
 			while ( $results = $this->offset( $offset )->get( $columns ) ) {
-				$callback( $results );
+				if ( false === $callback( $results ) ) {
+					$result = false;
+					break;
+				}
 				$offset += $number;
 			}
 		} );
+
+		return $result;
 	}
 
 	/**
