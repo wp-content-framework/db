@@ -41,11 +41,28 @@ class Join extends Builder {
 	public $table;
 
 	/**
-	 * The parent query builder instance.
+	 * The connection of the parent query builder.
 	 *
-	 * @var Builder
+	 * @var \WP_Framework_Db\Classes\Models\Connection $parent_connection
 	 */
-	private $parent_query;
+	protected $parent_connection;
+
+	/**
+	 * @var Grammar $parent_grammar
+	 */
+	protected $parent_grammar;
+
+	/**
+	 * The processor of the parent query builder.
+	 * @var Processor $parent_processor
+	 */
+	protected $parent_processor;
+
+	/**
+	 * The class name of the parent query builder.
+	 * @var string $parent_class
+	 */
+	protected $parent_class;
 
 	/**
 	 * Create a new join clause instance.
@@ -63,14 +80,17 @@ class Join extends Builder {
 		$type,
 		$table
 	) {
-		$this->type         = $type;
-		$this->table        = $table;
-		$this->parent_query = $parent_query;
+		$this->type              = $type;
+		$this->table             = $table;
+		$this->parent_connection = $parent_query->get_connection();
+		$this->parent_grammar    = $parent_query->get_grammar();
+		$this->parent_processor  = $parent_query->get_processor();
+		$this->parent_class      = get_class( $parent_query );
 		parent::__construct(
 			$app,
-			$parent_query->get_connection(),
-			$parent_query->get_grammar(),
-			$parent_query->get_processor()
+			$this->parent_connection,
+			$this->parent_grammar,
+			$this->parent_processor
 		);
 	}
 
@@ -122,7 +142,7 @@ class Join extends Builder {
 	 * @return Join
 	 */
 	public function new_query() {
-		return new static( $this->app, $this->parent_query, $this->type, $this->table );
+		return new static( $this->app, $this->new_parent_query(), $this->type, $this->table );
 	}
 
 	/**
@@ -131,6 +151,17 @@ class Join extends Builder {
 	 * @return Builder
 	 */
 	protected function for_sub_query() {
-		return $this->parent_query->new_query();
+		return $this->new_parent_query()->new_query();
+	}
+
+	/**
+	 * Create a new parent query instance.
+	 *
+	 * @return Builder
+	 */
+	protected function new_parent_query() {
+		$class = $this->parent_class;
+
+		return new $class( $this->parent_connection, $this->parent_grammar, $this->parent_processor );
 	}
 }
