@@ -14,6 +14,8 @@
 
 namespace WP_Framework_Db\Classes\Models\Query;
 
+use WP_Framework;
+
 if ( ! defined( 'WP_CONTENT_FRAMEWORK' ) ) {
 	exit;
 }
@@ -25,18 +27,18 @@ if ( ! defined( 'WP_CONTENT_FRAMEWORK' ) ) {
 class Processor {
 
 	/**
-	 * @var \WP_Framework
+	 * @var WP_Framework
 	 */
 	protected $app;
 
 	/**
 	 * Create a new database processor instance.
 	 *
-	 * @param \WP_Framework $app
+	 * @param WP_Framework $app
 	 *
 	 * @return void
 	 */
-	public function __construct( \WP_Framework $app ) {
+	public function __construct( WP_Framework $app ) {
 		$this->app = $app;
 	}
 

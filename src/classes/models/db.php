@@ -11,6 +11,12 @@
 
 namespace WP_Framework_Db\Classes\Models;
 
+use Exception;
+use WP_Framework_Common\Traits\Uninstall;
+use WP_Framework_Core\Traits\Hook;
+use WP_Framework_Core\Traits\Singleton;
+use WP_Framework_Db\Traits\Package;
+
 if ( ! defined( 'WP_CONTENT_FRAMEWORK' ) ) {
 	exit;
 }
@@ -21,7 +27,7 @@ if ( ! defined( 'WP_CONTENT_FRAMEWORK' ) ) {
  */
 class Db implements \WP_Framework_Core\Interfaces\Singleton, \WP_Framework_Core\Interfaces\Hook, \WP_Framework_Common\Interfaces\Uninstall {
 
-	use \WP_Framework_Core\Traits\Singleton, \WP_Framework_Core\Traits\Hook, \WP_Framework_Common\Traits\Uninstall, \WP_Framework_Db\Traits\Package;
+	use Singleton, Hook, Uninstall, Package;
 
 	/**
 	 * @var array $table_defines
@@ -34,7 +40,7 @@ class Db implements \WP_Framework_Core\Interfaces\Singleton, \WP_Framework_Core\
 	private static $_type2format = [];
 
 	/**
-	 * @var \Exception $_error
+	 * @var Exception $_error
 	 */
 	private $_error = null;
 
@@ -611,7 +617,7 @@ class Db implements \WP_Framework_Core\Interfaces\Singleton, \WP_Framework_Core\
 	}
 
 	/**
-	 * @return \Exception|null
+	 * @return Exception|null
 	 */
 	public function get_last_transaction_error() {
 		return $this->_error;
@@ -673,7 +679,7 @@ class Db implements \WP_Framework_Core\Interfaces\Singleton, \WP_Framework_Core\
 				$this->commit();
 
 				return true;
-			} catch ( \Exception $e ) {
+			} catch ( Exception $e ) {
 				$this->rollback();
 				$this->app->log( $e );
 				$this->_error = $e;

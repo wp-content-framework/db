@@ -14,6 +14,11 @@
 
 namespace WP_Framework_Db\Classes\Models;
 
+use DateTimeInterface;
+use Exception;
+use WP_Framework;
+use wpdb;
+
 if ( ! defined( 'WP_CONTENT_FRAMEWORK' ) ) {
 	exit;
 }
@@ -25,7 +30,7 @@ if ( ! defined( 'WP_CONTENT_FRAMEWORK' ) ) {
 abstract class Connection {
 
 	/**
-	 * @var \WP_Framework
+	 * @var WP_Framework
 	 */
 	protected $app;
 
@@ -42,12 +47,12 @@ abstract class Connection {
 	/**
 	 * Create a new database connection instance.
 	 *
-	 * @param \WP_Framework $app
+	 * @param WP_Framework $app
 	 * @param Grammar $grammar
 	 *
 	 * @return void
 	 */
-	public function __construct( \WP_Framework $app, Grammar $grammar ) {
+	public function __construct( WP_Framework $app, Grammar $grammar ) {
 		$this->app     = $app;
 		$this->grammar = $grammar;
 	}
@@ -63,7 +68,7 @@ abstract class Connection {
 	}
 
 	/**
-	 * @return \wpdb
+	 * @return wpdb
 	 */
 	protected function wpdb() {
 		return $this->app->db->wpdb();
@@ -181,7 +186,7 @@ abstract class Connection {
 
 			if ( $elapsed > 10 * 1000 ) {
 				if ( $this->app->utility->defined( 'WP_FRAMEWORK_REPORT_SLOW_QUERY' ) ) {
-					$this->app->log( new \Exception( 'slow query detected.' ), [ 'query' => $real_query, 'elapsed ms' => $elapsed ] );
+					$this->app->log( new Exception( 'slow query detected.' ), [ 'query' => $real_query, 'elapsed ms' => $elapsed ] );
 				}
 			}
 		} else {
@@ -204,7 +209,7 @@ abstract class Connection {
 			// We need to transform all instances of DateTimeInterface into the actual
 			// date string. Each query grammar maintains its own date string format
 			// so we'll just ask the grammar for the format to get from the date.
-			if ( $value instanceof \DateTimeInterface ) {
+			if ( $value instanceof DateTimeInterface ) {
 				$bindings[ $key ] = $value->format( $this->grammar->get_date_format() );
 			} elseif ( is_bool( $value ) ) {
 				$bindings[ $key ] = (int) $value;

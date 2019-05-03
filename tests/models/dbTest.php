@@ -11,6 +11,9 @@
 
 namespace WP_Framework_Db\Tests\Models;
 
+use Phake;
+use WP_Framework_Db\Tests\TestCase;
+
 require_once __DIR__ . DS . 'misc' . DS . 'db.php';
 
 /**
@@ -19,7 +22,7 @@ require_once __DIR__ . DS . 'misc' . DS . 'db.php';
  * @group wp_framework
  * @group models
  */
-class DbTest extends \WP_Framework_Db\Tests\TestCase {
+class DbTest extends TestCase {
 
 	/**
 	 * @var Misc\Db $_db
@@ -29,7 +32,7 @@ class DbTest extends \WP_Framework_Db\Tests\TestCase {
 	public static function setUpBeforeClass() {
 		parent::setUpBeforeClass();
 		static::$_db = Misc\Db::get_instance( static::$app );
-		\Phake::when( static::$app )->__get( 'db' )->thenReturn( static::$_db );
+		Phake::when( static::$app )->__get( 'db' )->thenReturn( static::$_db );
 		static::$_db->drop( 'technote_test_table1' );
 		static::$_db->drop( 'technote_test_table2' );
 		static::$_db->setup( 'technote_test_table1', [

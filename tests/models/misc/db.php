@@ -11,6 +11,8 @@
 
 namespace WP_Framework_Db\Tests\Models\Misc;
 
+use wpdb;
+
 if ( ! defined( 'WP_CONTENT_FRAMEWORK' ) ) {
 	exit;
 }
@@ -46,7 +48,7 @@ class Db extends \WP_Framework_Db\Classes\Models\Db {
 	 * @param string $table
 	 */
 	public function drop( $table ) {
-		/** @var \wpdb $wpdb */
+		/** @var wpdb $wpdb */
 		global $wpdb;
 
 		$sql = 'DROP TABLE IF EXISTS `' . $this->get_table( $table ) . '`';
@@ -59,7 +61,7 @@ class Db extends \WP_Framework_Db\Classes\Models\Db {
 	 * @return bool
 	 */
 	public function exists( $table ) {
-		/** @var \wpdb $wpdb */
+		/** @var wpdb $wpdb */
 		global $wpdb;
 
 		$sql = 'SHOW TABLES LIKE \'' . $this->get_table( $table ) . '\'';
@@ -76,7 +78,7 @@ class Db extends \WP_Framework_Db\Classes\Models\Db {
 	 * @return array
 	 */
 	public function columns( $table ) {
-		/** @var \wpdb $wpdb */
+		/** @var wpdb $wpdb */
 		global $wpdb;
 
 		$sql = 'DESCRIBE `' . $this->get_table( $table ) . '`';

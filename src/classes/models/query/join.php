@@ -15,6 +15,8 @@
 namespace WP_Framework_Db\Classes\Models\Query;
 
 use Closure;
+use InvalidArgumentException;
+use WP_Framework;
 
 if ( ! defined( 'WP_CONTENT_FRAMEWORK' ) ) {
 	exit;
@@ -67,7 +69,7 @@ class Join extends Builder {
 	/**
 	 * Create a new join clause instance.
 	 *
-	 * @param  \WP_Framework $app
+	 * @param  WP_Framework $app
 	 * @param  Builder $parent_query
 	 * @param  string $type
 	 * @param  string $table
@@ -75,7 +77,7 @@ class Join extends Builder {
 	 * @return void
 	 */
 	public function __construct(
-		\WP_Framework $app,
+		WP_Framework $app,
 		Builder $parent_query,
 		$type,
 		$table
@@ -106,14 +108,14 @@ class Join extends Builder {
 	 *
 	 * on `contacts`.`user_id` = `users`.`id` and `contacts`.`info_id` = `info`.`id`
 	 *
-	 * @param  \Closure|string $first
+	 * @param Closure|string $first
 	 * @param  string|null $operator
 	 * @param  string|null $second
 	 * @param  string $boolean
 	 *
 	 * @return $this
 	 *
-	 * @throws \InvalidArgumentException
+	 * @throws InvalidArgumentException
 	 */
 	public function on( $first, $operator = null, $second = null, $boolean = 'and' ) {
 		if ( $first instanceof Closure ) {
@@ -126,7 +128,7 @@ class Join extends Builder {
 	/**
 	 * Add an "or on" clause to the join.
 	 *
-	 * @param  \Closure|string $first
+	 * @param Closure|string $first
 	 * @param  string|null $operator
 	 * @param  string|null $second
 	 *
