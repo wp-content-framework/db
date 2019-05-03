@@ -948,7 +948,7 @@ class Grammar extends \WP_Framework_Db\Classes\Models\Grammar {
 	 * @return string
 	 */
 	protected function compile_delete_without_joins( $query, $table, $where ) {
-		$sql = trim( "delete from {$table} {$where}" );
+		$sql = trim( /** @lang text */ "delete from {$table} {$where}" );
 		// When using MySQL, delete statements may contain order by statements and limits
 		// so we will compile both of those here. Once we have finished compiling this
 		// we will return the completed SQL statement so it will be executed for us.
@@ -976,7 +976,7 @@ class Grammar extends \WP_Framework_Db\Classes\Models\Grammar {
 		$alias = stripos( $table, ' as ' ) !== false
 			? explode( ' as ', $table )[1] : $table;
 
-		return trim( "delete {$alias} from {$table}{$joins} {$where}" );
+		return trim( /** @lang text */ "delete {$alias} from {$table}{$joins} {$where}" );
 	}
 
 	/**
