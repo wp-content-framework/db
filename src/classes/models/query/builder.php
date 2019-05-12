@@ -424,7 +424,7 @@ class Builder {
 	public function from_sub( $query, $as ) {
 		list( $query, $bindings ) = $this->create_sub( $query );
 
-		return $this->from_raw( '(' . $query . ') as ' . $this->grammar->wrap( $as ), $bindings );
+		return $this->from_raw( '(' . $query . ') as ' . $this->grammar->wrap_table( $as ), $bindings );
 	}
 
 	/**
