@@ -92,8 +92,8 @@ abstract class Connection {
 	/**
 	 * Run an insert statement against the database.
 	 *
-	 * @param  string $query
-	 * @param  array $bindings
+	 * @param string $query
+	 * @param array $bindings
 	 *
 	 * @return int|false
 	 */
@@ -119,8 +119,8 @@ abstract class Connection {
 	/**
 	 * Run an update statement against the database.
 	 *
-	 * @param  string $query
-	 * @param  array $bindings
+	 * @param string $query
+	 * @param array $bindings
 	 *
 	 * @return int
 	 */
@@ -131,8 +131,8 @@ abstract class Connection {
 	/**
 	 * Run a delete statement against the database.
 	 *
-	 * @param  string $query
-	 * @param  array $bindings
+	 * @param string $query
+	 * @param array $bindings
 	 *
 	 * @return int|false
 	 */
@@ -143,8 +143,8 @@ abstract class Connection {
 	/**
 	 * Execute an SQL statement and return the boolean result.
 	 *
-	 * @param  string $query
-	 * @param  array $bindings
+	 * @param string $query
+	 * @param array $bindings
 	 *
 	 * @return int|false
 	 */
@@ -200,7 +200,7 @@ abstract class Connection {
 	/**
 	 * Prepare the query bindings for execution.
 	 *
-	 * @param  array $bindings
+	 * @param array $bindings
 	 *
 	 * @return array
 	 */
@@ -222,7 +222,7 @@ abstract class Connection {
 	/**
 	 * Get a new raw query expression.
 	 *
-	 * @param  mixed $value
+	 * @param mixed $value
 	 *
 	 * @return Query\Expression
 	 */

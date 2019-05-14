@@ -671,7 +671,7 @@ class Db implements \WP_Framework_Core\Interfaces\Singleton, \WP_Framework_Core\
 	 */
 	public function transaction( callable $func ) {
 		$level = $this->_transaction_level;
-		$this->_transaction_level ++;
+		$this->_transaction_level++;
 		if ( $level === 0 ) {
 			$this->_error = null;
 			try {

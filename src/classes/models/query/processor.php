@@ -45,8 +45,8 @@ class Processor {
 	/**
 	 * Process the results of a "select" query.
 	 *
-	 * @param  Builder $query
-	 * @param  array $results
+	 * @param Builder $query
+	 * @param array $results
 	 *
 	 * @return array
 	 */
@@ -88,7 +88,7 @@ class Processor {
 	/**
 	 * Process the results of a column listing query.
 	 *
-	 * @param  array $results
+	 * @param array $results
 	 *
 	 * @return array
 	 */

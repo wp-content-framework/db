@@ -69,10 +69,10 @@ class Join extends Builder {
 	/**
 	 * Create a new join clause instance.
 	 *
-	 * @param  WP_Framework $app
-	 * @param  Builder $parent_query
-	 * @param  string $type
-	 * @param  string $table
+	 * @param WP_Framework $app
+	 * @param Builder $parent_query
+	 * @param string $type
+	 * @param string $table
 	 *
 	 * @return void
 	 */
@@ -109,9 +109,9 @@ class Join extends Builder {
 	 * on `contacts`.`user_id` = `users`.`id` and `contacts`.`info_id` = `info`.`id`
 	 *
 	 * @param Closure|string $first
-	 * @param  string|null $operator
-	 * @param  string|null $second
-	 * @param  string $boolean
+	 * @param string|null $operator
+	 * @param string|null $second
+	 * @param string $boolean
 	 *
 	 * @return $this
 	 *
@@ -129,8 +129,8 @@ class Join extends Builder {
 	 * Add an "or on" clause to the join.
 	 *
 	 * @param Closure|string $first
-	 * @param  string|null $operator
-	 * @param  string|null $second
+	 * @param string|null $operator
+	 * @param string|null $second
 	 *
 	 * @return Join
 	 */
