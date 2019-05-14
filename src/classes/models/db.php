@@ -452,6 +452,7 @@ class Db implements \WP_Framework_Core\Interfaces\Singleton, \WP_Framework_Core\
 	 * @return array
 	 */
 	protected function table_update( $table, array $define ) {
+		/** @noinspection PhpIncludeInspection */
 		require_once ABSPATH . "wp-admin" . DS . "includes" . DS . "upgrade.php";
 		$char = $this->app->utility->definedv( 'DB_CHARSET', 'utf8' );
 		if ( empty( $define['id'] ) ) {
