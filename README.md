@@ -19,7 +19,6 @@
 
 |設定値|説明|
 |---|---|
-|db_version|DBのバージョン \[default = 0.0.1]|
 |default_delete_rule|デフォルトの削除動作を指定（physical or logical \[default = physical]）|
 
 - configs/db.php
@@ -81,8 +80,8 @@
 ),
 ```
 
-設定を更新したら configs/config.php の db_version も更新します。  
-自動でテーブルの追加・更新が行われます。  
+プラグインのバージョンが変更されたとき またはキャッシュを削除することで 自動でテーブルの追加・更新が行われます。  
+default の途中変更に関しては文字列のみ対応しています。 [詳細](https://github.com/wp-content-framework/db/issues/25#issuecomment-492293617)  
 データの取得・挿入・更新・削除はLaravelのDB操作と同じように行うことができます。
 ```
 // 取得
