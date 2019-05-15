@@ -87,7 +87,7 @@ class Db implements \WP_Framework_Core\Interfaces\Singleton, \WP_Framework_Core\
 				case stristr( $type, 'BIT' ) !== false:
 					$format = '%d';
 					break;
-				case stristr( $type, 'BOOLEAN' ) !== false:
+				case stristr( $type, 'BOOL' ) !== false:
 					$format = '%d';
 					break;
 				case stristr( $type, 'DECIMAL' ) !== false:
@@ -463,14 +463,13 @@ class Db implements \WP_Framework_Core\Interfaces\Singleton, \WP_Framework_Core\
 		$sql   = "CREATE TABLE {$table} (\n";
 		foreach ( $define['columns'] as $key => $column ) {
 			$name     = $this->app->array->get( $column, 'name' );
-			$type     = $this->app->array->get( $column, 'type' );
+			$type     = strtolower( $this->app->array->get( $column, 'type' ) );
 			$unsigned = $this->app->array->get( $column, 'unsigned', false );
 			$null     = $this->app->array->get( $column, 'null', true );
-			$default  = $this->app->array->get( $column, 'default', null );
 			$comment  = $this->app->array->get( $column, 'comment', '' );
 
-			$sql .= $name . ' ' . strtolower( $type );
-			if ( $unsigned ) {
+			$sql .= $name . ' ' . $type;
+			if ( $unsigned && '%s' !== $this->type2format( $type ) && strstr( $type, 'bit' ) === false && strstr( $type, 'bool' ) === false ) {
 				$sql .= ' unsigned';
 			}
 			if ( $null ) {
@@ -480,9 +479,19 @@ class Db implements \WP_Framework_Core\Interfaces\Singleton, \WP_Framework_Core\
 			}
 			if ( $key === 'id' ) {
 				$sql .= ' AUTO_INCREMENT';
-			} elseif ( isset( $default ) ) {
-				$default = str_replace( '\'', '\\\'', $default );
-				$sql     .= " DEFAULT '{$default}'";
+			} elseif ( $this->app->array->exists( $column, 'default' ) ) {
+				$default = $this->app->array->get( $column, 'default' );
+				if ( ! is_string( $default ) ) {
+					if ( is_bool( $default ) ) {
+						$default = (int) $default;
+					} else {
+						$default = var_export( $default, true );
+					}
+					$sql .= " DEFAULT {$default}";
+				} else {
+					$default = str_replace( '\'', '\\\'', $default );
+					$sql     .= " DEFAULT '{$default}'";
+				}
 			}
 			if ( ! empty( $comment ) ) {
 				$comment = str_replace( '\'', '\\\'', $comment );
