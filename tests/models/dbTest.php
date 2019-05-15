@@ -172,7 +172,7 @@ class DbTest extends TestCase {
 				'value2' => [
 					'type'    => 'INT(11)',
 					'null'    => false,
-					'default' => 2,
+					'default' => '2',
 				],
 				'value3' => [
 					'type' => 'VARCHAR(32)',
@@ -224,22 +224,41 @@ class DbTest extends TestCase {
 			'value3' => 'text2',
 			'value4' => 2,
 		] ) );
+		$this->assertEquals( 1, static::$_db->insert( 'technote_test_table2', [
+			'value2' => 20,
+			'value3' => 'text2',
+			'value4' => null,
+		] ) );
+		$this->assertEquals( 1, static::$_db->insert( 'technote_test_table2', [
+			'value2' => 30,
+			'value3' => 'text2',
+			'value4' => 2,
+		] ) );
 
 		$this->assertEquals( 2, static::$_db->builder()->table( 'technote_test_table1' )->insert( [
 			'value1' => 'text10',
 			'value2' => 10,
 			'value3' => 'text30',
 		] ) );
-		$this->assertEquals( 3, static::$_db->builder()->table( 'technote_test_table2' )->insert( [
-			'value1' => 100,
-			'value2' => 200,
+		$this->assertEquals( 5, static::$_db->builder()->table( 'technote_test_table2' )->insert( [
+			'value2' => 0,
 			'value3' => 'text10',
 			'value4' => 10,
 		] ) );
-		$this->assertEquals( 4, static::$_db->builder()->table( 'technote_test_table2' )->insert( [
+		$this->assertEquals( 6, static::$_db->builder()->table( 'technote_test_table2' )->insert( [
 			'value2' => 100,
 			'value3' => 'text20',
 			'value4' => 20,
+		] ) );
+		$this->assertEquals( 7, static::$_db->builder()->table( 'technote_test_table2' )->insert( [
+			'value2' => 200,
+			'value3' => 'text20',
+			'value4' => null,
+		] ) );
+		$this->assertEquals( 8, static::$_db->builder()->table( 'technote_test_table2' )->insert( [
+			'value2' => 300,
+			'value3' => 'text20',
+			'value4' => 2,
 		] ) );
 	}
 
@@ -259,14 +278,22 @@ class DbTest extends TestCase {
 		], [
 			'id' => 10,
 		] ) );
+		$this->assertEquals( 1, static::$_db->update( 'technote_test_table2', [
+			'value4' => null,
+		], [
+			'id' => 4,
+		] ) );
 
-		$this->assertEquals( 1, static::$_db->builder()->table( 'technote_test_table2' )->where( 'id', 4 )->update( [
+		$this->assertEquals( 1, static::$_db->builder()->table( 'technote_test_table2' )->where( 'id', 5 )->update( [
 			'value3' => 'text30',
 			'value4' => 30,
 		] ) );
 		$this->assertEquals( 0, static::$_db->builder()->table( 'technote_test_table2' )->where( 'id', 10 )->update( [
 			'value3' => 'text40',
 			'value4' => 40,
+		] ) );
+		$this->assertEquals( 1, static::$_db->builder()->table( 'technote_test_table2' )->where( 'id', 8 )->update( [
+			'value4' => null,
 		] ) );
 	}
 
@@ -286,12 +313,24 @@ class DbTest extends TestCase {
 		$this->assertEquals( 'text3', $result['value3'] );
 		$this->assertEquals( 3, $result['value4'] );
 
-		$result = static::$_db->builder()->table( 'technote_test_table2' )->find( 1 );
+		$results = static::$_db->select( 'technote_test_table2', [
+			'id' => [ 'in', [ 3, 4 ] ],
+		] );
+		$this->assertCount( 2, $results );
+		$this->assertNull( $results[0]['value4'] );
+		$this->assertNull( $results[1]['value4'] );
+
+		$result = static::$_db->builder()->table( 'technote_test_table2' )->find( 5 );
 		$this->assertArrayHasKey( 'id', $result );
 		$this->assertArrayHasKey( 'value3', $result );
 		$this->assertArrayHasKey( 'value4', $result );
-		$this->assertEquals( 'text3', $result['value3'] );
-		$this->assertEquals( 3, $result['value4'] );
+		$this->assertEquals( 'text30', $result['value3'] );
+		$this->assertEquals( 30, $result['value4'] );
+
+		$results = static::$_db->builder()->table( 'technote_test_table2' )->where_integer_in_raw( 'id', [ 7, 8 ] )->get();
+		$this->assertCount( 2, $results );
+		$this->assertNull( $results[0]['value4'] );
+		$this->assertNull( $results[1]['value4'] );
 	}
 
 	/**
@@ -303,7 +342,7 @@ class DbTest extends TestCase {
 		] );
 		$this->assertEmpty( $results );
 
-		$results = static::$_db->builder()->table( 'technote_test_table2' )->where( 'id', 10 )->get();
+		$results = static::$_db->builder()->table( 'technote_test_table2' )->find( 10 );
 		$this->assertEmpty( $results );
 	}
 
@@ -312,11 +351,11 @@ class DbTest extends TestCase {
 	 */
 	public function test_count() {
 		$this->assertEquals( 2, static::$_db->select_count( 'technote_test_table1' ) );
-		$this->assertEquals( 4, static::$_db->select_count( 'technote_test_table2' ) );
+		$this->assertEquals( 8, static::$_db->select_count( 'technote_test_table2' ) );
 		$this->assertEquals( 1, static::$_db->select_count( 'technote_test_table1', '*', [ 'value2' => 1 ] ) );
 
 		$this->assertEquals( 2, static::$_db->builder()->table( 'technote_test_table1' )->count() );
-		$this->assertEquals( 4, static::$_db->builder()->table( 'technote_test_table2' )->count() );
+		$this->assertEquals( 8, static::$_db->builder()->table( 'technote_test_table2' )->count() );
 		$this->assertEquals( 1, static::$_db->builder()->table( 'technote_test_table1' )->where( 'value2', 1 )->count() );
 	}
 
@@ -327,14 +366,14 @@ class DbTest extends TestCase {
 		$count = 0;
 		static::$_db->builder()->table( 'technote_test_table2' )->chunk( 2, function ( $results ) use ( &$count ) {
 			$this->assertCount( 2, $results );
-			$count ++;
+			$count++;
 		} );
-		$this->assertEquals( 2, $count );
+		$this->assertEquals( 8 / 2, $count );
 
 		$count = 0;
 		static::$_db->builder()->table( 'technote_test_table2' )->chunk( 2, function ( $results ) use ( &$count ) {
 			$this->assertCount( 2, $results );
-			$count ++;
+			$count++;
 
 			return false;
 		} );
@@ -347,13 +386,13 @@ class DbTest extends TestCase {
 	public function test_each() {
 		$count = 0;
 		static::$_db->builder()->table( 'technote_test_table2' )->each( 2, function () use ( &$count ) {
-			$count ++;
+			$count++;
 		} );
-		$this->assertEquals( 4, $count );
+		$this->assertEquals( 8, $count );
 
 		$count = 0;
 		static::$_db->builder()->table( 'technote_test_table2' )->each( 2, function () use ( &$count ) {
-			$count ++;
+			$count++;
 
 			return false;
 		} );
@@ -376,15 +415,22 @@ class DbTest extends TestCase {
 		$this->assertEquals( 1, static::$_db->delete( 'technote_test_table2', [
 			'id' => 2,
 		] ) );
+		$this->assertEquals( 1, static::$_db->delete( 'technote_test_table2', [
+			'id' => 3,
+		] ) );
+		$this->assertEquals( 1, static::$_db->delete( 'technote_test_table2', [
+			'id' => 4,
+		] ) );
 		$this->assertEquals( 0, static::$_db->delete( 'technote_test_table2', [
-			'id' => 30,
+			'id' => 10,
 		] ) );
 
 		$this->assertEquals( 1, static::$_db->builder()->table( 'technote_test_table1' )->delete( 2 ) );
 		$this->assertEquals( false, static::$_db->builder()->table( 'technote_test_table1' )->delete( 2 ) );
-		$this->assertEquals( 1, static::$_db->builder()->table( 'technote_test_table2' )->delete( 3 ) );
-		$this->assertEquals( 1, static::$_db->builder()->table( 'technote_test_table2' )->delete( 4 ) );
-		$this->assertEquals( false, static::$_db->builder()->table( 'technote_test_table2' )->delete( 5 ) );
+		$this->assertEquals( 1, static::$_db->builder()->table( 'technote_test_table2' )->delete( 5 ) );
+		$this->assertEquals( 1, static::$_db->builder()->table( 'technote_test_table2' )->delete( 6 ) );
+		$this->assertEquals( false, static::$_db->builder()->table( 'technote_test_table2' )->delete( 10 ) );
+		$this->assertEquals( 2, static::$_db->builder()->table( 'technote_test_table2' )->where_integer_in_raw( 'id', [ 7, 8 ] )->delete() );
 	}
 
 	/**

@@ -180,6 +180,8 @@ abstract class Grammar {
 				return '%d';
 			case 'double':
 				return '%f';
+			case 'NULL':
+				return 'NULL';
 			default:
 				return '%s';
 		}

@@ -213,6 +213,8 @@ abstract class Connection {
 				$bindings[ $key ] = $value->format( $this->grammar->get_date_format() );
 			} elseif ( is_bool( $value ) ) {
 				$bindings[ $key ] = (int) $value;
+			} elseif ( is_null( $value ) ) {
+				unset( $bindings[ $key ] );
 			}
 		}
 
