@@ -87,7 +87,7 @@ class Db implements \WP_Framework_Core\Interfaces\Singleton, \WP_Framework_Core\
 				case stristr( $type, 'BIT' ) !== false:
 					$format = '%d';
 					break;
-				case stristr( $type, 'BOOLEAN' ) !== false:
+				case stristr( $type, 'BOOL' ) !== false:
 					$format = '%d';
 					break;
 				case stristr( $type, 'DECIMAL' ) !== false:
@@ -469,7 +469,7 @@ class Db implements \WP_Framework_Core\Interfaces\Singleton, \WP_Framework_Core\
 			$comment  = $this->app->array->get( $column, 'comment', '' );
 
 			$sql .= $name . ' ' . $type;
-			if ( $unsigned && stristr( $type, 'BIT' ) === false && stristr( $type, 'BOOLEAN' ) === false ) {
+			if ( $unsigned && '%s' !== $this->type2format( $type ) && strstr( $type, 'bit' ) === false && strstr( $type, 'bool' ) === false ) {
 				$sql .= ' unsigned';
 			}
 			if ( $null ) {
