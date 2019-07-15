@@ -929,13 +929,9 @@ class Grammar extends \WP_Framework_Db\Classes\Models\Grammar {
 	 * @return array
 	 */
 	public function prepare_bindings_for_delete( array $bindings ) {
-		$clean_bindings = $bindings;
-		unset( $clean_bindings['join'] );
-		unset( $clean_bindings['select'] );
+		unset( $bindings['select'] );
 
-		return array_values(
-			array_merge( $bindings['join'], $this->app->array->flatten( $clean_bindings ) )
-		);
+		return $this->app->array->flatten( $bindings );
 	}
 
 	/**
