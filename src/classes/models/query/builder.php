@@ -2,7 +2,6 @@
 /**
  * WP_Framework_Db Classes Models Query Builder
  *
- * @version 0.0.19
  * @author Technote
  * @copyright Technote All Rights Reserved
  * @license http://www.opensource.org/licenses/gpl-2.0.php GNU General Public License, version 2
@@ -1141,15 +1140,18 @@ class Builder {
 	/**
 	 * Add a "where null" clause to the query.
 	 *
-	 * @param string $column
+	 * @param string|array $columns
 	 * @param string $boolean
 	 * @param bool $not
 	 *
 	 * @return $this
 	 */
-	public function where_null( $column, $boolean = 'and', $not = false ) {
+	public function where_null( $columns, $boolean = 'and', $not = false ) {
 		$type = $not ? 'not_null' : 'null';
-		$this->add_where( compact( 'type', 'column', 'boolean' ) );
+
+		foreach ( (array) $columns as $column ) {
+			$this->add_where( compact( 'type', 'column', 'boolean' ) );
+		}
 
 		return $this;
 	}
@@ -1336,6 +1338,9 @@ class Builder {
 		if ( $value instanceof DateTimeInterface ) {
 			$value = $value->format( 'd' );
 		}
+		if ( ! $value instanceof Expression ) {
+			$value = str_pad( $value, 2, '0', STR_PAD_LEFT );
+		}
 
 		return $this->add_date_based_where( 'day', $column, $operator, $value, $boolean );
 	}
@@ -1373,6 +1378,9 @@ class Builder {
 		);
 		if ( $value instanceof DateTimeInterface ) {
 			$value = $value->format( 'm' );
+		}
+		if ( ! $value instanceof Expression ) {
+			$value = str_pad( $value, 2, '0', STR_PAD_LEFT );
 		}
 
 		return $this->add_date_based_where( 'month', $column, $operator, $value, $boolean );
@@ -2222,9 +2230,9 @@ class Builder {
 	 */
 	public function aggregate( $function, $columns = [ '*' ] ) {
 		$results = $this->clone_without( $this->unions ? [] : [ 'columns' ] )
-		                ->clone_without_bindings( $this->unions ? [] : [ 'select' ] )
-		                ->set_aggregate( $function, $columns )
-		                ->get( $columns );
+			->clone_without_bindings( $this->unions ? [] : [ 'select' ] )
+			->set_aggregate( $function, $columns )
+			->get( $columns );
 		if ( ! empty( $results ) ) {
 			return array_change_key_case( $results[0] )['aggregate'];
 		}
