@@ -70,7 +70,7 @@ class Grammar extends \WP_Framework_Db\Classes\Models\Grammar {
 		// To compile the query, we'll spin through each component of the query and
 		// see if that component exists. If it does we'll just call the compiler
 		// function for the component which is responsible for making the SQL.
-		$sql            = trim( $this->concatenate(
+		$sql = trim( $this->concatenate(
 			$this->compile_components( $query ) )
 		);
 		$query->columns = $original;
@@ -982,7 +982,7 @@ class Grammar extends \WP_Framework_Db\Classes\Models\Grammar {
 	 * @return string
 	 */
 	public function compile_truncate( Builder $query ) {
-		return 'truncate ' . $this->wrap_table( $query->from );
+		return 'truncate table ' . $this->wrap_table( $query->from );
 	}
 
 	/**
