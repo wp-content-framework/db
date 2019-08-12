@@ -73,6 +73,11 @@ class Grammar extends \WP_Framework_Db\Classes\Models\Grammar {
 		$sql = trim( $this->concatenate(
 			$this->compile_components( $query ) )
 		);
+
+		if ( $query->unions ) {
+			$sql = $this->wrap_union( $sql ) . ' ' . $this->compile_unions( $query );
+		}
+
 		$query->columns = $original;
 
 		if ( $query->unions ) {
@@ -761,7 +766,18 @@ class Grammar extends \WP_Framework_Db\Classes\Models\Grammar {
 	protected function compile_union( array $union ) {
 		$conjunction = $union['all'] ? ' union all ' : ' union ';
 
-		return $conjunction . '(' . $union['query']->to_sql() . ')';
+		return $conjunction . $this->wrap_union( $union['query']->to_sql() );
+	}
+
+	/**
+	 * Wrap a union subquery in parentheses.
+	 *
+	 * @param string $sql
+	 *
+	 * @return string
+	 */
+	protected function wrap_union( $sql ) {
+		return '(' . $sql . ')';
 	}
 
 	/**
