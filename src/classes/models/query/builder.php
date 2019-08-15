@@ -1803,7 +1803,7 @@ class Builder {
 	/**
 	 * Add an "order by" clause to the query.
 	 *
-	 * @param string $column
+	 * @param Closure|Builder|string $column
 	 * @param string $direction
 	 *
 	 * @return $this
@@ -1811,6 +1811,12 @@ class Builder {
 	 * @throws InvalidArgumentException
 	 */
 	public function order_by( $column, $direction = 'asc' ) {
+		if ( $column instanceof self || $column instanceof Builder || $column instanceof Closure ) {
+			list( $query, $bindings ) = $this->create_sub( $column );
+			$column = new Expression( '(' . $query . ')' );
+			$this->add_binding( $bindings, 'order' );
+		}
+
 		$direction = strtolower( $direction );
 		if ( ! in_array( $direction, [ 'asc', 'desc' ], true ) ) {
 			throw new InvalidArgumentException( 'Order direction must be "asc" or "desc".' );
