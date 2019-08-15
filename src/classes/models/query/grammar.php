@@ -855,51 +855,72 @@ class Grammar extends \WP_Framework_Db\Classes\Models\Grammar {
 	 *
 	 * @return string
 	 */
-	public function compile_update( Builder $query, $values ) {
+	public function compile_update( Builder $query, array $values ) {
 		$table = $this->wrap_table( $query->from );
-		// Each one of the columns in the update statements needs to be wrapped in the
-		// keyword identifiers, also a place-holder needs to be created for each of
-		// the values in the list of bindings so we can make the sets statements.
-		$columns = $this->compile_update_columns( $values );
-		// If the query has any "join" clauses, we will setup the joins on the builder
-		// and compile them so we can attach them to this update, as update queries
-		// can get join statements to attach to other tables when they're needed.
-		$joins = '';
-		if ( isset( $query->joins ) ) {
-			$joins = ' ' . $this->compile_joins( $query, $query->joins );
-		}
-		// Of course, update queries may also be constrained by where clauses so we'll
-		// need to compile the where clauses and attach it to the query so only the
-		// intended records are updated by the SQL statements we generate to run.
-		$where = $this->compile_wheres( $query );
-		$sql   = rtrim( "update {$table}{$joins} set $columns $where" );
-		// If the query has an order by clause we will compile it since MySQL supports
-		// order bys on update statements. We'll compile them using the typical way
-		// of compiling order bys. Then they will be appended to the SQL queries.
-		if ( ! empty( $query->orders ) ) {
-			$sql .= ' ' . $this->compile_orders( $query, $query->orders );
-		}
-		// Updates on MySQL also supports "limits", which allow you to easily update a
-		// single record very easily. This is not supported by all database engines
-		// so we have customized this update compiler here in order to add it in.
-		if ( isset( $query->limit ) ) {
-			$sql .= ' ' . $this->compile_limit( $query, $query->limit );
-		}
 
-		return rtrim( $sql );
+		$columns = $this->compile_update_columns( $query, $values );
+
+		$where = $this->compile_wheres( $query );
+
+		return trim(
+			isset( $query->joins )
+				? $this->compile_update_with_joins( $query, $table, $columns, $where )
+				: $this->compile_update_without_joins( $query, $table, $columns, $where )
+		);
 	}
 
 	/**
-	 * Compile all of the columns for an update statement.
+	 * Compile the columns for an update statement.
 	 *
+	 * @param Builder $query
 	 * @param array $values
 	 *
 	 * @return string
 	 */
-	protected function compile_update_columns( $values ) {
+	protected function compile_update_columns( /** @noinspection PhpUnusedParameterInspection */ Builder $query, array $values ) {
 		return implode( ', ', $this->app->array->map( $values, function ( $value, $key ) {
 			return $this->wrap( $key ) . ' = ' . $this->parameter( $value );
 		} ) );
+	}
+
+	/**
+	 * Compile an update statement with joins into SQL.
+	 *
+	 * @param Builder $query
+	 * @param string $table
+	 * @param string $columns
+	 * @param string $where
+	 *
+	 * @return string
+	 */
+	protected function compile_update_with_joins( Builder $query, $table, $columns, $where ) {
+		$joins = $this->compile_joins( $query, $query->joins );
+
+		return "update {$table} {$joins} set {$columns} {$where}";
+	}
+
+	/**
+	 * Compile an update statement without joins into SQL.
+	 *
+	 * @param Builder $query
+	 * @param string $table
+	 * @param string $columns
+	 * @param string $where
+	 *
+	 * @return string
+	 */
+	protected function compile_update_without_joins( Builder $query, $table, $columns, $where ) {
+		$sql = "update {$table} set {$columns} {$where}";
+
+		if ( ! empty( $query->orders ) ) {
+			$sql .= ' ' . $this->compile_orders( $query, $query->orders );
+		}
+
+		if ( isset( $query->limit ) ) {
+			$sql .= ' ' . $this->compile_limit( $query, $query->limit );
+		}
+
+		return $sql;
 	}
 
 	/**
