@@ -339,7 +339,15 @@ class Builder {
 	 */
 	private function _set_select_columns( $columns, $callback ) {
 		$callback();
-		foreach ( $columns as $column ) {
+		foreach ( $columns as $as => $column ) {
+			if ( is_string( $as ) && (
+					$column instanceof self ||
+					$column instanceof Closure
+				) ) {
+				$this->select_sub( $column, $as );
+				continue;
+			}
+
 			$column = $this->get_managed_column( $column, true );
 			$hash   = $this->create_hash( $column );
 			if ( array_key_exists( $hash, $this->columns ) ) {
