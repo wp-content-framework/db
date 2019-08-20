@@ -2713,12 +2713,12 @@ class Builder {
 	 * @param array $columns
 	 * @param Closure|Builder|string $query
 	 *
-	 * @return int|false
+	 * @return int
 	 */
 	public function insert_using( array $columns, $query ) {
 		list( $sql, $bindings ) = $this->create_sub( $query );
 
-		return $this->connection->insert(
+		return $this->connection->statement(
 			$this->grammar->compile_insert_using( $this, $columns, $sql ),
 			$this->clean_bindings( $bindings )
 		);
