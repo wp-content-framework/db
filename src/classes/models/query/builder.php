@@ -2625,6 +2625,20 @@ class Builder {
 	}
 
 	/**
+	 * @param array $values
+	 *
+	 * @return array
+	 */
+	private function flatten( array $values ) {
+		$flatten = [];
+		foreach ( $values as $item ) {
+			$flatten = array_merge( $flatten, array_values( $item ) );
+		}
+
+		return $flatten;
+	}
+
+	/**
 	 * Insert a new record into the database.
 	 *
 	 * @param array $values
@@ -2660,16 +2674,36 @@ class Builder {
 		// Finally, we will run this query against the database connection and return
 		// the results. We will need to also flatten these bindings before running
 		// the query so they are all in one huge, flattened array for execution.
-		$flatten = [];
-		foreach ( $values as $item ) {
-			$flatten = array_merge( $flatten, array_values( $item ) );
-		}
-
 		$method = $bulk ? 'bulk_insert' : 'insert';
 
 		return $this->connection->$method(
 			$this->grammar->compile_insert( $this, $values ),
-			$this->clean_bindings( $flatten )
+			$this->clean_bindings( $this->flatten( $values ) )
+		);
+	}
+
+	/**
+	 * @param array $values
+	 *
+	 * @return int
+	 */
+	public function insert_or_ignore( array $values ) {
+		if ( empty( $values ) ) {
+			return 0;
+		}
+
+		if ( ! is_array( reset( $values ) ) ) {
+			$values = [ $values ];
+		} else {
+			foreach ( $values as $key => $value ) {
+				ksort( $value );
+				$values[ $key ] = $value;
+			}
+		}
+
+		return $this->connection->statement(
+			$this->grammar->compile_insert_or_ignore( $this, $values ),
+			$this->clean_bindings( $this->flatten( $values ) )
 		);
 	}
 

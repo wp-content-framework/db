@@ -835,6 +835,16 @@ class Grammar extends \WP_Framework_Db\Classes\Models\Grammar {
 	}
 
 	/**
+	 * @param Builder $query
+	 * @param array $values
+	 *
+	 * @return string
+	 */
+	public function compile_insert_or_ignore( Builder $query, array $values ) {
+		return substr_replace( $this->compile_insert( $query, $values ), ' ignore', 6, 0 );
+	}
+
+	/**
 	 * Compile an insert statement using a subquery into SQL.
 	 *
 	 * @param Builder $query
