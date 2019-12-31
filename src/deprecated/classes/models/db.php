@@ -24,7 +24,6 @@ class Db extends \WP_Framework_Db\Classes\Models\Db {
 	 * initialize
 	 */
 	protected function initialize() {
-
 	}
 
 	/**
@@ -38,7 +37,7 @@ class Db extends \WP_Framework_Db\Classes\Models\Db {
 		$_data    = [];
 		$_columns = $columns;
 		foreach ( $data as $k => $v ) {
-			$columns = $_columns;
+			$columns                = $_columns;
 			list( $name, $columns ) = $this->get_field_data( $k, $columns );
 			if ( isset( $columns[ $k ] ) ) {
 				$_format[] = $columns[ $k ]['format'];
@@ -121,7 +120,7 @@ class Db extends \WP_Framework_Db\Classes\Models\Db {
 				}
 				if ( $key === '*' ) {
 					if ( ! is_array( $option ) ) {
-						unset ( $fields[ $k ] );
+						unset( $fields[ $k ] );
 						foreach ( $columns as $key => $column ) {
 							if ( ! $is_admin && ! empty( $column['only_admin'] ) ) {
 								continue;
@@ -168,7 +167,7 @@ class Db extends \WP_Framework_Db\Classes\Models\Db {
 			}
 		}
 		empty( $fields ) and $fields = [ '*' ];
-		$fields = implode( ', ', $fields );
+		$fields                      = implode( ', ', $fields );
 
 		return $fields;
 	}
@@ -182,8 +181,8 @@ class Db extends \WP_Framework_Db\Classes\Models\Db {
 	 */
 	private function build_conditions( array $where, array $columns, $glue = 'AND' ) {
 		list ( $_where, $_where_format ) = $this->filter( $where, $columns );
-		$conditions = $values = [];
-		$index      = 0;
+		$conditions                      = $values = [];
+		$index                           = 0;
 		foreach ( $_where as $field => $value ) {
 			$field  = trim( $field );
 			$format = $_where_format[ $index++ ];
@@ -216,7 +215,7 @@ class Db extends \WP_Framework_Db\Classes\Models\Db {
 						$_conditions = [];
 						foreach ( $value as $v ) {
 							if ( ! is_array( $v ) ) {
-								$_conditions[] = "1=0";
+								$_conditions[] = '1=0';
 								continue;
 							}
 							list( $c, $v ) = $this->build_conditions( $v, $columns );
@@ -229,7 +228,7 @@ class Db extends \WP_Framework_Db\Classes\Models\Db {
 					}
 					if ( is_array( $val ) ) {
 						if ( empty( $val ) ) {
-							$conditions[] = "1=0";
+							$conditions[] = '1=0';
 						} else {
 							foreach ( $val as $v ) {
 								$values[] = $v;
@@ -432,8 +431,8 @@ class Db extends \WP_Framework_Db\Classes\Models\Db {
 		}
 
 		list( $conditions, $values ) = $this->build_conditions( $where, $columns );
-		$table  = $this->get_table( $table );
-		$fields = $this->build_fields( $fields, $columns );
+		$table                       = $this->get_table( $table );
+		$fields                      = $this->build_fields( $fields, $columns );
 		/** @noinspection SqlResolve */
 		$sql = "SELECT {$fields} FROM `{$table}`";
 		if ( isset( $as ) ) {
@@ -517,7 +516,7 @@ class Db extends \WP_Framework_Db\Classes\Models\Db {
 	/** @noinspection PhpUnusedPrivateMethodInspection */
 	private function select_count( $table, $field = '*', $where = null, $limit = null, $offset = null, $order_by = null, $group_by = null, $for_update = false ) {
 		empty( $field ) and $field = '*';
-		$result = $this->select( $table, $where, [
+		$result                    = $this->select( $table, $where, [
 			$field => [
 				'COUNT',
 				'num',
@@ -550,7 +549,7 @@ class Db extends \WP_Framework_Db\Classes\Models\Db {
 
 		$columns = $this->table_defines[ $table ]['columns'];
 
-		$data = $this->set_update_params( $data, $method === 'insert', true, false );
+		$data                     = $this->set_update_params( $data, $method === 'insert', true, false );
 		list ( $_data, $_format ) = $this->filter( $data, $columns );
 
 		return $this->wpdb()->$method( $this->get_table( $table ), $_data, $_format );
@@ -598,7 +597,7 @@ class Db extends \WP_Framework_Db\Classes\Models\Db {
 			$placeholder[] = $columns[ $k ]['format'];
 		}
 		$placeholder = '(' . implode( ', ', $placeholder ) . ')';
-		$sql         .= '(' . implode( ', ', $names ) . ') VALUES ';
+		$sql        .= '(' . implode( ', ', $names ) . ') VALUES ';
 
 		$values = [];
 		foreach ( $data_list as $data ) {
@@ -645,8 +644,8 @@ class Db extends \WP_Framework_Db\Classes\Models\Db {
 			$where['deleted_at'] = null;
 		}
 
-		$data = $this->set_update_params( $data, false, true, false );
-		list ( $_data, $_format ) = $this->filter( $data, $columns );
+		$data                            = $this->set_update_params( $data, false, true, false );
+		list ( $_data, $_format )        = $this->filter( $data, $columns );
 		list ( $_where, $_where_format ) = $this->filter( $where, $columns );
 
 		return $this->wpdb()->update( $this->get_table( $table ), $_data, $_where, $_format, $_where_format );

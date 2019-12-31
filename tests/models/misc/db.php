@@ -27,7 +27,6 @@ class Db extends \WP_Framework_Db\Classes\Models\Db {
 	 * initialize
 	 */
 	protected function initialize() {
-
 	}
 
 	/**
