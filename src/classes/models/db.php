@@ -81,23 +81,13 @@ class Db implements \WP_Framework_Core\Interfaces\Singleton, \WP_Framework_Core\
 			$format = '%s';
 			switch ( true ) {
 				case stristr( $type, 'INT' ) !== false:
-					$format = '%d';
-					break;
 				case stristr( $type, 'BIT' ) !== false:
-					$format = '%d';
-					break;
 				case stristr( $type, 'BOOL' ) !== false:
 					$format = '%d';
 					break;
 				case stristr( $type, 'DECIMAL' ) !== false:
-					$format = '%f';
-					break;
 				case stristr( $type, 'FLOAT' ) !== false:
-					$format = '%f';
-					break;
 				case stristr( $type, 'DOUBLE' ) !== false:
-					$format = '%f';
-					break;
 				case stristr( $type, 'REAL' ) !== false:
 					$format = '%f';
 					break;
@@ -119,7 +109,7 @@ class Db implements \WP_Framework_Core\Interfaces\Singleton, \WP_Framework_Core\
 			return;
 		}
 
-		$this->table_defines = $this->app->config->load( 'db' );
+		$this->table_defines                                   = $this->app->config->load( 'db' );
 		empty( $this->table_defines ) and $this->table_defines = [];
 		$added_tables = $this->app->option->get_grouped( 'added_tables', 'db', [] );
 
@@ -355,8 +345,8 @@ class Db implements \WP_Framework_Core\Interfaces\Singleton, \WP_Framework_Core\
 				$_value   = $segments[0];
 				$as       = $this->unwrap( $segments[1] );
 			}
-			$_value = $this->unwrap( explode( '.', $_value )[0] );
-			empty( $as ) and $as = $_value;
+			$_value                            = $this->unwrap( explode( '.', $_value )[0] );
+			empty( $as ) and $as               = $_value;
 			$this->_table_name_cache[ $value ] = [ $_value, $as ];
 		}
 
@@ -451,8 +441,7 @@ class Db implements \WP_Framework_Core\Interfaces\Singleton, \WP_Framework_Core\
 	 * @return array
 	 */
 	protected function table_update( $table, array $define ) {
-		/** @noinspection PhpIncludeInspection */
-		require_once ABSPATH . "wp-admin" . DS . "includes" . DS . "upgrade.php";
+		require_once ABSPATH . 'wp-admin' . DS . 'includes' . DS . 'upgrade.php';
 		$char = $this->app->utility->definedv( 'DB_CHARSET', 'utf8' );
 		if ( empty( $define['id'] ) ) {
 			$define['id'] = $table . '_id';
@@ -489,12 +478,12 @@ class Db implements \WP_Framework_Core\Interfaces\Singleton, \WP_Framework_Core\
 					$sql .= " DEFAULT {$default}";
 				} else {
 					$default = str_replace( '\'', '\\\'', $default );
-					$sql     .= " DEFAULT '{$default}'";
+					$sql    .= " DEFAULT '{$default}'";
 				}
 			}
 			if ( ! empty( $comment ) ) {
 				$comment = str_replace( '\'', '\\\'', $comment );
-				$sql     .= " COMMENT '{$comment}'";
+				$sql    .= " COMMENT '{$comment}'";
 			}
 			$sql .= ",\n";
 		}
@@ -523,7 +512,7 @@ class Db implements \WP_Framework_Core\Interfaces\Singleton, \WP_Framework_Core\
 		$sql .= "\n) ENGINE = InnoDB DEFAULT CHARSET = {$char}";
 		if ( ! empty( $define['comment'] ) ) {
 			$define['comment'] = str_replace( '\'', '\\\'', $define['comment'] );
-			$sql               .= " COMMENT '{$define['comment']}'";
+			$sql              .= " COMMENT '{$define['comment']}'";
 		}
 		$sql .= ';';
 
@@ -538,7 +527,7 @@ class Db implements \WP_Framework_Core\Interfaces\Singleton, \WP_Framework_Core\
 	protected function is_logical( array $define ) {
 		return $this->apply_filters( 'is_logical', 'physical' !== $this->app->array->get( $define, 'delete', function () {
 				return $this->app->get_config( 'config', 'default_delete_rule' );
-			} ), $define );
+		} ), $define );
 	}
 
 	/**

@@ -18,6 +18,7 @@ use DateTimeInterface;
 use InvalidArgumentException;
 use BadMethodCallException;
 use WP_Framework;
+use WP_Framework_Common\Classes\Models\Collection;
 
 if ( ! defined( 'WP_CONTENT_FRAMEWORK' ) ) {
 	exit;
@@ -339,15 +340,7 @@ class Builder {
 	 */
 	private function _set_select_columns( $columns, $callback ) {
 		$callback();
-		foreach ( $columns as $as => $column ) {
-			if ( is_string( $as ) && (
-					$column instanceof self ||
-					$column instanceof Closure
-				) ) {
-				$this->select_sub( $column, $as );
-				continue;
-			}
-
+		foreach ( $columns as $column ) {
 			$column = $this->get_managed_column( $column, true );
 			$hash   = $this->create_hash( $column );
 			if ( array_key_exists( $hash, $this->columns ) ) {
@@ -2037,12 +2030,13 @@ class Builder {
 	 * @param string $column
 	 * @param string|null $key
 	 *
-	 * @return array
+	 * @return Collection
 	 */
 	public function pluck( $column, $key = null ) {
 		// First, we will need to select the results of the query accounting for the
 		// given columns / key. Once we have the results, we will be able to take
 		// the results and get the exact data that was requested for the query.
+		/** @var Collection $query_result */
 		$query_result = $this->once_with_columns(
 			is_null( $key ) ? [ $column ] : [ $column, $key ],
 			function () {
@@ -2051,8 +2045,8 @@ class Builder {
 				);
 			}
 		);
-		if ( empty( $query_result ) ) {
-			return [];
+		if ( $query_result->is_empty() ) {
+			return new Collection( $this->app );
 		}
 		// If the columns are qualified with a table or have an alias, we cannot use
 		// those directly in the "pluck" operations since the results from the DB
@@ -2060,9 +2054,10 @@ class Builder {
 		$column = $this->strip_table_for_pluck( $column );
 		$key    = $this->strip_table_for_pluck( $key );
 
-		return is_array( $query_result[0] )
+		return new Collection( $this->app, is_array( $query_result[0] )
 			? $this->pluck_from_array_column( $query_result, $column, $key )
-			: $this->pluck_from_object_column( $query_result, $column, $key );
+			: $this->pluck_from_object_column( $query_result, $column, $key )
+		);
 	}
 
 	/**
@@ -2073,13 +2068,13 @@ class Builder {
 	 * @return string|null
 	 */
 	protected function strip_table_for_pluck( $column ) {
-		return is_null( $column ) ? $column : end( preg_split( '~\.| ~', $column ) );
+		return is_null( $column ) ? $column : end( preg_split( '~[. ]~', $column ) );
 	}
 
 	/**
 	 * Retrieve column values from rows represented as objects.
 	 *
-	 * @param array $query_result
+	 * @param Collection $query_result
 	 * @param string $column
 	 * @param string $key
 	 *
@@ -2103,7 +2098,7 @@ class Builder {
 	/**
 	 * Retrieve column values from rows represented as arrays.
 	 *
-	 * @param array $query_result
+	 * @param Collection $query_result
 	 * @param string $column
 	 * @param string $key
 	 *
@@ -2133,7 +2128,7 @@ class Builder {
 	 * @return string
 	 */
 	public function implode( $column, $glue = '' ) {
-		return implode( $glue, $this->pluck( $column ) );
+		return implode( $glue, $this->pluck( $column )->to_array() );
 	}
 
 	/**
@@ -2247,7 +2242,7 @@ class Builder {
 			->clone_without_bindings( $this->unions ? [] : [ 'select' ] )
 			->set_aggregate( $function, $columns )
 			->get( $columns );
-		if ( ! empty( $results ) ) {
+		if ( ! $results->is_empty() ) {
 			return array_change_key_case( $results[0] )['aggregate'];
 		}
 
@@ -2520,7 +2515,7 @@ class Builder {
 	 *
 	 * @param array|string $columns
 	 *
-	 * @return array
+	 * @return Collection
 	 */
 	public function get( $columns = [ '*' ] ) {
 		list( $managed, $table ) = $this->get_managed_table();
@@ -2539,12 +2534,7 @@ class Builder {
 	 * @return array|null
 	 */
 	public function row( $columns = [ '*' ] ) {
-		$results = $this->take( 1 )->get( $columns );
-		if ( empty( $results ) ) {
-			return null;
-		}
-
-		return reset( $results );
+		return $this->take( 1 )->get( $columns )->first();
 	}
 
 	/**
@@ -2625,20 +2615,6 @@ class Builder {
 	}
 
 	/**
-	 * @param array $values
-	 *
-	 * @return array
-	 */
-	private function flatten( array $values ) {
-		$flatten = [];
-		foreach ( $values as $item ) {
-			$flatten = array_merge( $flatten, array_values( $item ) );
-		}
-
-		return $flatten;
-	}
-
-	/**
 	 * Insert a new record into the database.
 	 *
 	 * @param array $values
@@ -2674,36 +2650,16 @@ class Builder {
 		// Finally, we will run this query against the database connection and return
 		// the results. We will need to also flatten these bindings before running
 		// the query so they are all in one huge, flattened array for execution.
+		$flatten = [];
+		foreach ( $values as $item ) {
+			$flatten = array_merge( $flatten, array_values( $item ) );
+		}
+
 		$method = $bulk ? 'bulk_insert' : 'insert';
 
 		return $this->connection->$method(
 			$this->grammar->compile_insert( $this, $values ),
-			$this->clean_bindings( $this->flatten( $values ) )
-		);
-	}
-
-	/**
-	 * @param array $values
-	 *
-	 * @return int
-	 */
-	public function insert_or_ignore( array $values ) {
-		if ( empty( $values ) ) {
-			return 0;
-		}
-
-		if ( ! is_array( reset( $values ) ) ) {
-			$values = [ $values ];
-		} else {
-			foreach ( $values as $key => $value ) {
-				ksort( $value );
-				$values[ $key ] = $value;
-			}
-		}
-
-		return $this->connection->statement(
-			$this->grammar->compile_insert_or_ignore( $this, $values ),
-			$this->clean_bindings( $this->flatten( $values ) )
+			$this->clean_bindings( $flatten )
 		);
 	}
 
@@ -2713,12 +2669,12 @@ class Builder {
 	 * @param array $columns
 	 * @param Closure|Builder|string $query
 	 *
-	 * @return int
+	 * @return int|false
 	 */
 	public function insert_using( array $columns, $query ) {
 		list( $sql, $bindings ) = $this->create_sub( $query );
 
-		return $this->connection->statement(
+		return $this->connection->insert(
 			$this->grammar->compile_insert_using( $this, $columns, $sql ),
 			$this->clean_bindings( $bindings )
 		);

@@ -176,7 +176,7 @@ abstract class Connection {
 
 			$elapsed = microtime( true ) * 1000 - $start;
 
-			! isset( static::$_queries[ $this->app->plugin_name ] ) and static::$_queries[ $this->app->plugin_name ] = [];
+			! isset( static::$_queries[ $this->app->plugin_name ] ) and static::$_queries[ $this->app->plugin_name ]                   = [];
 			! isset( static::$_queries[ $this->app->plugin_name ][ $hash ] ) and static::$_queries[ $this->app->plugin_name ][ $hash ] = [
 				'query'   => $real_query,
 				'execute' => [],
@@ -185,7 +185,10 @@ abstract class Connection {
 
 			if ( $elapsed > 10 * 1000 ) {
 				if ( $this->app->utility->defined( 'WP_FRAMEWORK_REPORT_SLOW_QUERY' ) ) {
-					$this->app->log( new Exception( 'slow query detected.' ), [ 'query' => $real_query, 'elapsed ms' => $elapsed ] );
+					$this->app->log( new Exception( 'slow query detected.' ), [
+						'query'      => $real_query,
+						'elapsed ms' => $elapsed,
+					] );
 				}
 			}
 		} else {
