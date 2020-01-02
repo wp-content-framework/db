@@ -18,6 +18,7 @@ use DateTimeInterface;
 use InvalidArgumentException;
 use BadMethodCallException;
 use WP_Framework;
+use WP_Framework_Common\Classes\Models\Collection;
 
 if ( ! defined( 'WP_CONTENT_FRAMEWORK' ) ) {
 	exit;
@@ -26,6 +27,13 @@ if ( ! defined( 'WP_CONTENT_FRAMEWORK' ) ) {
 /**
  * Class Builder
  * @package WP_Framework_Db\Classes\Models\Query
+ * @SuppressWarnings(PHPMD.ExcessiveClassLength)
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
+ * @SuppressWarnings(PHPMD.ExcessivePublicCount)
+ * @SuppressWarnings(PHPMD.TooManyMethods)
+ * @SuppressWarnings(PHPMD.TooManyPublicMethods)
+ * @SuppressWarnings(PHPMD.TooManyFields)
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
 class Builder {
 
@@ -220,9 +228,9 @@ class Builder {
 	];
 
 	/**
-	 * @var array $_managed_column_cache
+	 * @var array $managed_column_cache
 	 */
-	protected $_managed_column_cache = [];
+	protected $managed_column_cache = [];
 
 	/**
 	 * @var int $ttl
@@ -277,7 +285,7 @@ class Builder {
 		}
 		$column = trim( $column );
 		$key    = $column;
-		if ( ! isset( $this->_managed_column_cache[ $key ] ) ) {
+		if ( ! isset( $this->managed_column_cache[ $key ] ) ) {
 			$column_table = null;
 			$exploded     = explode( '.', $column );
 			if ( count( $exploded ) >= 2 ) {
@@ -299,7 +307,7 @@ class Builder {
 			list( $managed, $table, $as ) = $this->get_managed_table( $column_table );
 			if ( $managed ) {
 				$name = $this->app->array->get( $this->app->db->get_columns( $table ), $this->app->db->unwrap( $_column ) . '.name', $_column );
-				$as   .= '.';
+				$as   = $as . '.';
 				if ( $select && '*' === $name && ! $column_table ) {
 					$as = '';
 				}
@@ -309,17 +317,17 @@ class Builder {
 					$column = "{$as}{$name}";
 				}
 			}
-			$this->_managed_column_cache[ $key ] = $column;
+			$this->managed_column_cache[ $key ] = $column;
 		}
 
-		return $this->_managed_column_cache[ $key ];
+		return $this->managed_column_cache[ $key ];
 	}
 
 	/**
 	 * @param array|mixed $columns
 	 */
 	protected function set_select_columns( $columns ) {
-		$this->_set_select_columns( is_array( $columns ) ? $columns : func_get_args(), function () {
+		$this->set_select_columns_common( is_array( $columns ) ? $columns : func_get_args(), function () {
 			$this->columns = [];
 		} );
 	}
@@ -328,8 +336,10 @@ class Builder {
 	 * @param array|mixed $columns
 	 */
 	private function add_select_columns( $columns ) {
-		$this->_set_select_columns( is_array( $columns ) ? $columns : func_get_args(), function () {
-			! is_array( $this->columns ) and $this->columns = [];
+		$this->set_select_columns_common( is_array( $columns ) ? $columns : func_get_args(), function () {
+			if ( ! is_array( $this->columns ) ) {
+				$this->columns = [];
+			}
 		} );
 	}
 
@@ -337,7 +347,7 @@ class Builder {
 	 * @param array $columns
 	 * @param callable $callback
 	 */
-	private function _set_select_columns( $columns, $callback ) {
+	private function set_select_columns_common( $columns, $callback ) {
 		$callback();
 		foreach ( $columns as $column ) {
 			$column = $this->get_managed_column( $column, true );
@@ -359,7 +369,7 @@ class Builder {
 			$value = $value->get_value();
 		}
 
-		return sha1( json_encode( $value ) );
+		return sha1( wp_json_encode( $value ) );
 	}
 
 	/**
@@ -454,7 +464,8 @@ class Builder {
 		// format and work with the query before we cast it to a raw SQL string.
 		if ( $query instanceof Closure ) {
 			$callback = $query;
-			$callback( $query = $this->for_sub_query() );
+			$query    = $this->for_sub_query();
+			$callback( $query );
 		}
 
 		return $this->parse_sub( $query );
@@ -473,7 +484,7 @@ class Builder {
 		} elseif ( is_string( $query ) ) {
 			return [ $query, [] ];
 		} else {
-			throw new InvalidArgumentException;
+			throw new InvalidArgumentException();
 		}
 	}
 
@@ -537,18 +548,11 @@ class Builder {
 	 */
 	public function join( $table, $first, $operator = null, $second = null, $type = 'inner', $where = false ) {
 		$join = $this->new_join_clause( $this, $type, $table );
-		// If the first "column" of the join is really a Closure instance the developer
-		// is trying to build a join with a complex "on" clause containing more than
-		// one condition, so we'll add the join and call a Closure with the query.
 		if ( $first instanceof Closure ) {
 			call_user_func( $first, $join );
 			$this->joins[] = $join;
 			$this->add_binding( $join->get_bindings(), 'join' );
-		}
-		// If the column is simply a string, we can assume the join simply has a basic
-		// "on" clause with a single condition. So we will just build the join with
-		// this simple join clauses attached to it. There is not a join callback.
-		else {
+		} else {
 			$method        = $where ? 'where' : 'on';
 			$this->joins[] = $join->$method( $first, $operator, $second );
 			$this->add_binding( $join->get_bindings(), 'join' );
@@ -589,6 +593,7 @@ class Builder {
 	 */
 	public function join_sub( $query, $as, $first, $operator = null, $second = null, $type = 'inner', $where = false ) {
 		list( $query, $bindings ) = $this->create_sub( $query );
+
 		$expression = '(' . $query . ') as ' . $this->grammar->wrap( $as );
 		$this->add_binding( $bindings, 'join' );
 
@@ -865,7 +870,7 @@ class Builder {
 		// where null clause to the query. So, we will allow a short-cut here to
 		// that method for convenience so the developer doesn't have to check.
 		if ( is_null( $value ) ) {
-			return $this->where_null( $column, $boolean, $operator !== '=' );
+			return $this->where_null( $column, $boolean, '=' !== $operator );
 		}
 		// Now that we are working with just a simple query we can put the elements
 		// in our array and add the query binding to our array of bindings that
@@ -932,7 +937,7 @@ class Builder {
 	 * @return bool
 	 */
 	protected function invalid_operator_and_value( $operator, $value ) {
-		return is_null( $value ) && in_array( $operator, $this->operators ) && ! in_array( $operator, [ '=', '<>', '!=' ] );
+		return is_null( $value ) && in_array( $operator, $this->operators, true ) && ! in_array( $operator, [ '=', '<>', '!=' ], true );
 	}
 
 	/**
@@ -943,8 +948,7 @@ class Builder {
 	 * @return bool
 	 */
 	protected function invalid_operator( $operator ) {
-		return ! in_array( strtolower( $operator ), $this->operators, true ) &&
-		       ! in_array( strtolower( $operator ), $this->grammar->get_operators(), true );
+		return ! in_array( strtolower( $operator ), $this->operators, true ) && ! in_array( strtolower( $operator ), $this->grammar->get_operators(), true );
 	}
 
 	/**
@@ -1019,7 +1023,11 @@ class Builder {
 	 * @return $this
 	 */
 	public function where_raw( $sql, $bindings = [], $boolean = 'and' ) {
-		$this->add_where( [ 'type' => 'raw', 'sql' => $sql, 'boolean' => $boolean ] );
+		$this->add_where( [
+			'type'    => 'raw',
+			'sql'     => $sql,
+			'boolean' => $boolean,
+		] );
 		$this->add_binding( (array) $bindings, 'where' );
 
 		return $this;
@@ -1052,9 +1060,9 @@ class Builder {
 		// If the value is a query builder instance we will assume the developer wants to
 		// look for any values that exists within this given query. So we will add the
 		// query accordingly so that this query is properly executed when it is run.
-		if ( $values instanceof self ||
-		     $values instanceof Closure ) {
+		if ( $values instanceof self || $values instanceof Closure ) {
 			list( $query, $bindings ) = $this->create_sub( $values );
+
 			$values = [ new Expression( $query ) ];
 			$this->add_binding( $bindings, 'where' );
 		}
@@ -1639,25 +1647,15 @@ class Builder {
 	 * @return $this
 	 */
 	public function dynamic_where( $method, $parameters ) {
-		$finder   = substr( $method, 6 );
-		$segments = explode( '_', $finder );
-		// The connector variable will determine which connector will be used for the
-		// query condition. We will change it as we come across new boolean values
-		// in the dynamic method strings, which could contain a number of these.
+		$finder    = substr( $method, 6 );
+		$segments  = explode( '_', $finder );
 		$connector = 'and';
 		$index     = 0;
 		foreach ( $segments as $segment ) {
-			// If the segment is not a boolean connector, we can assume it is a column's name
-			// and we will add it to the query as a new constraint as a where clause, then
-			// we can keep iterating through the dynamic method string's segments again.
-			if ( $segment !== 'and' && $segment !== 'or' ) {
+			if ( 'and' !== $segment && 'or' !== $segment ) {
 				$this->add_dynamic( $segment, $connector, $parameters, $index );
 				$index++;
-			}
-			// Otherwise, we will store the connector so we know how the next where clause we
-			// find in the query should be connected to the previous ones, meaning we will
-			// have the proper boolean connector to connect the next where clause found.
-			else {
+			} else {
 				$connector = $segment;
 			}
 		}
@@ -1813,6 +1811,7 @@ class Builder {
 	public function order_by( $column, $direction = 'asc' ) {
 		if ( $column instanceof self || $column instanceof Builder || $column instanceof Closure ) {
 			list( $query, $bindings ) = $this->create_sub( $column );
+
 			$column = new Expression( '(' . $query . ')' );
 			$this->add_binding( $bindings, 'order' );
 		}
@@ -1882,7 +1881,8 @@ class Builder {
 	 * @return $this
 	 */
 	public function order_by_raw( $sql, $bindings = [] ) {
-		$type                                                = 'raw';
+		$type = 'raw';
+
 		$this->{$this->unions ? 'union_orders' : 'orders'}[] = compact( 'type', 'sql' );
 		$this->add_binding( $bindings, 'order' );
 
@@ -2029,12 +2029,13 @@ class Builder {
 	 * @param string $column
 	 * @param string|null $key
 	 *
-	 * @return array
+	 * @return Collection
 	 */
 	public function pluck( $column, $key = null ) {
 		// First, we will need to select the results of the query accounting for the
 		// given columns / key. Once we have the results, we will be able to take
 		// the results and get the exact data that was requested for the query.
+		/** @var Collection $query_result */
 		$query_result = $this->once_with_columns(
 			is_null( $key ) ? [ $column ] : [ $column, $key ],
 			function () {
@@ -2043,8 +2044,8 @@ class Builder {
 				);
 			}
 		);
-		if ( empty( $query_result ) ) {
-			return [];
+		if ( $query_result->is_empty() ) {
+			return new Collection( $this->app );
 		}
 		// If the columns are qualified with a table or have an alias, we cannot use
 		// those directly in the "pluck" operations since the results from the DB
@@ -2052,9 +2053,10 @@ class Builder {
 		$column = $this->strip_table_for_pluck( $column );
 		$key    = $this->strip_table_for_pluck( $key );
 
-		return is_array( $query_result[0] )
+		return new Collection( $this->app, is_array( $query_result[0] )
 			? $this->pluck_from_array_column( $query_result, $column, $key )
-			: $this->pluck_from_object_column( $query_result, $column, $key );
+			: $this->pluck_from_object_column( $query_result, $column, $key )
+		);
 	}
 
 	/**
@@ -2065,13 +2067,13 @@ class Builder {
 	 * @return string|null
 	 */
 	protected function strip_table_for_pluck( $column ) {
-		return is_null( $column ) ? $column : end( preg_split( '~\.| ~', $column ) );
+		return is_null( $column ) ? $column : end( preg_split( '~[. ]~', $column ) );
 	}
 
 	/**
 	 * Retrieve column values from rows represented as objects.
 	 *
-	 * @param array $query_result
+	 * @param Collection $query_result
 	 * @param string $column
 	 * @param string $key
 	 *
@@ -2095,7 +2097,7 @@ class Builder {
 	/**
 	 * Retrieve column values from rows represented as arrays.
 	 *
-	 * @param array $query_result
+	 * @param Collection $query_result
 	 * @param string $column
 	 * @param string $key
 	 *
@@ -2125,7 +2127,7 @@ class Builder {
 	 * @return string
 	 */
 	public function implode( $column, $glue = '' ) {
-		return implode( $glue, $this->pluck( $column ) );
+		return implode( $glue, $this->pluck( $column )->to_array() );
 	}
 
 	/**
@@ -2200,8 +2202,11 @@ class Builder {
 	 */
 	public function sum( $column ) {
 		$result = $this->aggregate( __FUNCTION__, [ $column ] );
+		if ( is_null( $result ) ) {
+			return 0;
+		}
 
-		return $result ?: 0;
+		return $result;
 	}
 
 	/**
@@ -2239,7 +2244,7 @@ class Builder {
 			->clone_without_bindings( $this->unions ? [] : [ 'select' ] )
 			->set_aggregate( $function, $columns )
 			->get( $columns );
-		if ( ! empty( $results ) ) {
+		if ( ! $results->is_empty() ) {
 			return array_change_key_case( $results[0] )['aggregate'];
 		}
 
@@ -2512,7 +2517,7 @@ class Builder {
 	 *
 	 * @param array|string $columns
 	 *
-	 * @return array
+	 * @return Collection
 	 */
 	public function get( $columns = [ '*' ] ) {
 		list( $managed, $table ) = $this->get_managed_table();
@@ -2531,12 +2536,7 @@ class Builder {
 	 * @return array|null
 	 */
 	public function row( $columns = [ '*' ] ) {
-		$results = $this->take( 1 )->get( $columns );
-		if ( empty( $results ) ) {
-			return null;
-		}
-
-		return reset( $results );
+		return $this->take( 1 )->get( $columns )->first();
 	}
 
 	/**
@@ -2562,7 +2562,11 @@ class Builder {
 		$result = true;
 		$this->app->db->transaction( function () use ( $number, $callback, $columns, &$result ) {
 			$offset = 0;
-			while ( $results = $this->offset( $offset )->get( $columns ) ) {
+			while ( true ) {
+				$results = $this->offset( $offset )->get( $columns );
+				if ( $results->is_empty() ) {
+					break;
+				}
 				if ( false === $callback( $results ) ) {
 					$result = false;
 					break;
@@ -2602,7 +2606,11 @@ class Builder {
 	 */
 	public function chunk_for_delete( $number, $callback, $id = 'id', $columns = [ '*' ] ) {
 		$this->order_by( $id )->limit( $number );
-		while ( $results = $this->get( $columns ) ) {
+		while ( true ) {
+			$results = $this->get( $columns );
+			if ( $results->is_empty() ) {
+				break;
+			}
 			$callback( $results );
 		}
 	}
@@ -2622,11 +2630,9 @@ class Builder {
 	 * @param array $values
 	 *
 	 * @return int|false
+	 * @SuppressWarnings(PHPMD.UnusedLocalVariable)
 	 */
 	public function insert( array $values ) {
-		// Since every insert gets treated like a batch insert, we will make sure the
-		// bindings are structured in a way that is convenient when building these
-		// inserts statements by verifying these elements are actually an array.
 		if ( empty( $values ) ) {
 			return true;
 		}
@@ -2636,22 +2642,18 @@ class Builder {
 		list( $managed, $table, $as ) = $this->get_managed_table();
 		if ( ! is_array( reset( $values ) ) ) {
 			$values = [ $managed ? $this->app->db->set_update_params( $values, true, true, false, $as ) : $values ];
-		}
-		// Here, we will sort the insert keys for every record so that each insert is
-		// in the same order for the record. We need to make sure this is the case
-		// so there are not any errors or problems when inserting these records.
-		else {
+		} else {
 			$bulk = true;
 			$time = $this->app->db->set_update_params( [], true, true, false, $as );
 			foreach ( $values as $key => $value ) {
-				$managed and $value = $value + $time;
+				if ( $managed ) {
+					$value = $value + $time;
+				}
 				ksort( $value );
 				$values[ $key ] = $value;
 			}
 		}
-		// Finally, we will run this query against the database connection and return
-		// the results. We will need to also flatten these bindings before running
-		// the query so they are all in one huge, flattened array for execution.
+
 		$flatten = [];
 		foreach ( $values as $item ) {
 			$flatten = array_merge( $flatten, array_values( $item ) );
@@ -2691,7 +2693,9 @@ class Builder {
 	 */
 	public function update( array $values ) {
 		list( $managed, $table, $as ) = $this->get_managed_table();
-		$managed and $values = $this->app->db->set_update_params( $values, false, true, false, $as );
+		if ( $managed ) {
+			$values = $this->app->db->set_update_params( $values, false, true, false, $as );
+		}
 		if ( $managed && $this->app->db->is_logical_table( $table ) ) {
 			$this->where_null( 'deleted_at' );
 		}
@@ -2791,9 +2795,11 @@ class Builder {
 		}
 
 		return $this->connection->delete(
-			$this->grammar->compile_delete( $this ), $this->clean_bindings(
-			$this->grammar->prepare_bindings_for_delete( $this->bindings )
-		) );
+			$this->grammar->compile_delete( $this ),
+			$this->clean_bindings(
+				$this->grammar->prepare_bindings_for_delete( $this->bindings )
+			)
+		);
 	}
 
 	/**

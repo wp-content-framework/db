@@ -14,6 +14,7 @@
 namespace WP_Framework_Db\Classes\Models\Query;
 
 use WP_Framework;
+use WP_Framework_Common\Classes\Models\Collection;
 
 if ( ! defined( 'WP_CONTENT_FRAMEWORK' ) ) {
 	exit;
@@ -47,12 +48,9 @@ class Processor {
 	 * @param Builder $query
 	 * @param array $results
 	 *
-	 * @return array
+	 * @return Collection
 	 */
-	public function process_select(
-		/** @noinspection PhpUnusedParameterInspection */
-		Builder $query, $results
-	) {
+	public function process_select( Builder $query, $results ) {
 		if ( empty( $query->aggregate ) ) {
 			list( $managed, $table ) = $this->app->db->get_managed_table( $query->from );
 			if ( $managed ) {
@@ -81,7 +79,7 @@ class Processor {
 			}
 		}
 
-		return $results;
+		return new Collection( $this->app, $results );
 	}
 
 	/**

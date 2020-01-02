@@ -39,9 +39,9 @@ abstract class Connection {
 	protected $grammar;
 
 	/**
-	 * @var array $_queries
+	 * @var array $queries
 	 */
-	protected static $_queries = [];
+	protected static $queries = [];
 
 	/**
 	 * Create a new database connection instance.
@@ -84,7 +84,7 @@ abstract class Connection {
 	 */
 	public function select( $query, $bindings = [], $ttl = 0 ) {
 		return $this->run( $query, $bindings, function ( $query ) {
-			return $this->wpdb()->get_results( $query, ARRAY_A );
+			return $this->wpdb()->get_results( $query, ARRAY_A ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
 		}, $ttl );
 	}
 
@@ -149,7 +149,7 @@ abstract class Connection {
 	 */
 	public function statement( $query, $bindings = [] ) {
 		return $this->run( $query, $bindings, function ( $query ) {
-			return $this->wpdb()->query( $query );
+			return $this->wpdb()->query( $query ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
 		} );
 	}
 
@@ -169,23 +169,30 @@ abstract class Connection {
 			$hash       = sha1( $real_query );
 			if ( $ttl > 0 ) {
 				// TODO: cache control
-				error_log( $hash );
+				error_log( $hash ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
 			}
 
 			$result = $callback( $real_query );
 
 			$elapsed = microtime( true ) * 1000 - $start;
 
-			! isset( static::$_queries[ $this->app->plugin_name ] ) and static::$_queries[ $this->app->plugin_name ] = [];
-			! isset( static::$_queries[ $this->app->plugin_name ][ $hash ] ) and static::$_queries[ $this->app->plugin_name ][ $hash ] = [
-				'query'   => $real_query,
-				'execute' => [],
-			];
-			static::$_queries[ $this->app->plugin_name ][ $hash ]['execute'][] = $elapsed;
+			if ( ! array_key_exists( $this->app->plugin_name, static::$queries ) ) {
+				static::$queries[ $this->app->plugin_name ] = [];
+			}
+			if ( ! array_key_exists( $hash, static::$queries[ $this->app->plugin_name ] ) ) {
+				static::$queries[ $this->app->plugin_name ][ $hash ] = [
+					'query'   => $real_query,
+					'execute' => [],
+				];
+			}
+			static::$queries[ $this->app->plugin_name ][ $hash ]['execute'][] = $elapsed;
 
 			if ( $elapsed > 10 * 1000 ) {
 				if ( $this->app->utility->defined( 'WP_FRAMEWORK_REPORT_SLOW_QUERY' ) ) {
-					$this->app->log( new Exception( 'slow query detected.' ), [ 'query' => $real_query, 'elapsed ms' => $elapsed ] );
+					$this->app->log( new Exception( 'slow query detected.' ), [
+						'query'      => $real_query,
+						'elapsed ms' => $elapsed,
+					] );
 				}
 			}
 		} else {
@@ -237,6 +244,6 @@ abstract class Connection {
 	 * @return array|false
 	 */
 	public static function queries( $name ) {
-		return isset( static::$_queries[ $name ] ) ? static::$_queries[ $name ] : false;
+		return array_key_exists( $name, static::$queries ) ? static::$queries[ $name ] : false;
 	}
 }

@@ -17,6 +17,7 @@ if ( ! defined( 'WP_CONTENT_FRAMEWORK' ) ) {
 /**
  * Class Db
  * @package WP_Framework_Db\Deprecated\Classes\Models
+ * @SuppressWarnings(PHPMD)
  */
 class Db extends \WP_Framework_Db\Classes\Models\Db {
 
@@ -24,7 +25,6 @@ class Db extends \WP_Framework_Db\Classes\Models\Db {
 	 * initialize
 	 */
 	protected function initialize() {
-
 	}
 
 	/**
@@ -39,6 +39,7 @@ class Db extends \WP_Framework_Db\Classes\Models\Db {
 		$_columns = $columns;
 		foreach ( $data as $k => $v ) {
 			$columns = $_columns;
+
 			list( $name, $columns ) = $this->get_field_data( $k, $columns );
 			if ( isset( $columns[ $k ] ) ) {
 				$_format[] = $columns[ $k ]['format'];
@@ -102,7 +103,7 @@ class Db extends \WP_Framework_Db\Classes\Models\Db {
 	 * @param array|null|string $fields
 	 * @param array $columns
 	 *
-	 * @return array
+	 * @return string
 	 */
 	private function build_fields( $fields, array $columns ) {
 		if ( ! isset( $fields ) ) {
@@ -119,9 +120,9 @@ class Db extends \WP_Framework_Db\Classes\Models\Db {
 					$key    = $option;
 					$option = null;
 				}
-				if ( $key === '*' ) {
+				if ( '*' === $key ) {
 					if ( ! is_array( $option ) ) {
-						unset ( $fields[ $k ] );
+						unset( $fields[ $k ] );
 						foreach ( $columns as $key => $column ) {
 							if ( ! $is_admin && ! empty( $column['only_admin'] ) ) {
 								continue;
@@ -139,7 +140,7 @@ class Db extends \WP_Framework_Db\Classes\Models\Db {
 				}
 				if ( is_array( $option ) ) {
 					$group_func = $option[0];
-					if ( strtoupper( $group_func ) == 'AS' ) {
+					if ( 'AS' === strtoupper( $group_func ) ) {
 						$fields[ $k ] = $name;
 						if ( count( $option ) >= 2 ) {
 							$fields[ $k ] .= ' AS ' . $option[1];
@@ -167,7 +168,9 @@ class Db extends \WP_Framework_Db\Classes\Models\Db {
 				$fields[] = $name === $key ? $name : $name . ' AS ' . $key;
 			}
 		}
-		empty( $fields ) and $fields = [ '*' ];
+		if ( empty( $fields ) ) {
+			$fields = [ '*' ];
+		}
 		$fields = implode( ', ', $fields );
 
 		return $fields;
@@ -182,7 +185,9 @@ class Db extends \WP_Framework_Db\Classes\Models\Db {
 	 */
 	private function build_conditions( array $where, array $columns, $glue = 'AND' ) {
 		list ( $_where, $_where_format ) = $this->filter( $where, $columns );
-		$conditions = $values = [];
+
+		$conditions = [];
+		$values     = [];
 		$index      = 0;
 		foreach ( $_where as $field => $value ) {
 			$field  = trim( $field );
@@ -195,8 +200,10 @@ class Db extends \WP_Framework_Db\Classes\Models\Db {
 			if ( in_array( strtoupper( $field ), [
 				'EXISTS',
 				'NOT EXISTS',
-			] ) ) {
-				! is_array( $value ) and $value = [ $value ];
+			], true ) ) {
+				if ( ! is_array( $value ) ) {
+					$value = [ $value ];
+				}
 				foreach ( $value as $sub_query ) {
 					$conditions[] = "$field ($sub_query)";
 				}
@@ -211,12 +218,12 @@ class Db extends \WP_Framework_Db\Classes\Models\Db {
 					if ( in_array( strtoupper( $op ), [
 						'OR',
 						'AND',
-					] ) ) {
+					], true ) ) {
 						array_shift( $value );
 						$_conditions = [];
 						foreach ( $value as $v ) {
 							if ( ! is_array( $v ) ) {
-								$_conditions[] = "1=0";
+								$_conditions[] = '1=0';
 								continue;
 							}
 							list( $c, $v ) = $this->build_conditions( $v, $columns );
@@ -229,7 +236,7 @@ class Db extends \WP_Framework_Db\Classes\Models\Db {
 					}
 					if ( is_array( $val ) ) {
 						if ( empty( $val ) ) {
-							$conditions[] = "1=0";
+							$conditions[] = '1=0';
 						} else {
 							foreach ( $val as $v ) {
 								$values[] = $v;
@@ -298,7 +305,7 @@ class Db extends \WP_Framework_Db\Classes\Models\Db {
 				} else {
 					$order = trim( strtoupper( $order ) );
 				}
-				if ( $order !== 'DESC' && $order !== 'ASC' ) {
+				if ( 'DESC' !== $order && 'ASC' !== $order ) {
 					continue;
 				}
 				$k       = $this->get_field_name( $k, $columns );
@@ -333,7 +340,7 @@ class Db extends \WP_Framework_Db\Classes\Models\Db {
 					'INNER JOIN',
 					'LEFT JOIN',
 					'RIGHT JOIN',
-				] ) ) {
+				], true ) ) {
 					continue;
 				}
 
@@ -403,7 +410,6 @@ class Db extends \WP_Framework_Db\Classes\Models\Db {
 	 *
 	 * @return string|false
 	 */
-	/** @noinspection PhpUnusedPrivateMethodInspection */
 	private function get_select_sql( $tables, $where = null, $fields = null, $limit = null, $offset = null, $order_by = null, $group_by = null, $for_update = false ) {
 		$as = null;
 		if ( is_array( $tables ) ) {
@@ -426,16 +432,18 @@ class Db extends \WP_Framework_Db\Classes\Models\Db {
 
 		$columns = $this->table_defines[ $table ]['columns'];
 
-		! is_array( $where ) and $where = [];
+		if ( ! is_array( $where ) ) {
+			$where = [];
+		}
 		if ( $this->is_logical( $this->table_defines[ $table ] ) ) {
 			$where['deleted_at'] = null;
 		}
 
 		list( $conditions, $values ) = $this->build_conditions( $where, $columns );
+
 		$table  = $this->get_table( $table );
 		$fields = $this->build_fields( $fields, $columns );
-		/** @noinspection SqlResolve */
-		$sql = "SELECT {$fields} FROM `{$table}`";
+		$sql    = "SELECT {$fields} FROM `{$table}`";
 		if ( isset( $as ) ) {
 			$sql .= " AS $as";
 		}
@@ -466,16 +474,17 @@ class Db extends \WP_Framework_Db\Classes\Models\Db {
 	 *
 	 * @return array|bool|null
 	 */
-	/** @noinspection PhpUnusedPrivateMethodInspection */
 	private function select( $tables, $where = null, $fields = null, $limit = null, $offset = null, $order_by = null, $group_by = null, $output = null, $for_update = false ) {
 		$sql = $this->get_select_sql( $tables, $where, $fields, $limit, $offset, $order_by, $group_by, $for_update );
 		if ( false === $sql ) {
 			return false;
 		}
 
-		! isset( $output ) and $output = ARRAY_A;
+		if ( ! isset( $output ) ) {
+			$output = ARRAY_A;
+		}
 
-		return $this->wpdb()->get_results( $sql, $output );
+		return $this->wpdb()->get_results( $sql, $output ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
 	}
 
 	/**
@@ -490,16 +499,17 @@ class Db extends \WP_Framework_Db\Classes\Models\Db {
 	 *
 	 * @return array|bool|null
 	 */
-	/** @noinspection PhpUnusedPrivateMethodInspection */
 	private function select_row( $tables, $where = null, $fields = null, $offset = null, $order_by = null, $group_by = null, $output = null, $for_update = false ) {
 		$sql = $this->get_select_sql( $tables, $where, $fields, 1, $offset, $order_by, $group_by, $for_update );
 		if ( false === $sql ) {
 			return false;
 		}
 
-		! isset( $output ) and $output = ARRAY_A;
+		if ( ! isset( $output ) ) {
+			$output = ARRAY_A;
+		}
 
-		return $this->wpdb()->get_row( $sql, $output );
+		return $this->wpdb()->get_row( $sql, $output ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
 	}
 
 	/**
@@ -516,7 +526,9 @@ class Db extends \WP_Framework_Db\Classes\Models\Db {
 	 */
 	/** @noinspection PhpUnusedPrivateMethodInspection */
 	private function select_count( $table, $field = '*', $where = null, $limit = null, $offset = null, $order_by = null, $group_by = null, $for_update = false ) {
-		empty( $field ) and $field = '*';
+		if ( empty( $field ) ) {
+			$field = '*';
+		}
 		$result = $this->select( $table, $where, [
 			$field => [
 				'COUNT',
@@ -537,20 +549,20 @@ class Db extends \WP_Framework_Db\Classes\Models\Db {
 	 *
 	 * @return false|int
 	 */
-	private function _insert_replace( $table, array $data, $method ) {
+	private function insert_or_replace( $table, array $data, $method ) {
 		if ( ! isset( $this->table_defines[ $table ] ) ) {
 			return false;
 		}
-		if ( $method !== 'insert' && $method !== 'replace' ) {
+		if ( 'insert' !== $method && 'replace' !== $method ) {
 			return false;
 		}
-		if ( $method === 'replace' && ! isset( $data['id'] ) ) {
+		if ( 'replace' === $method && ! isset( $data['id'] ) ) {
 			return false;
 		}
 
 		$columns = $this->table_defines[ $table ]['columns'];
+		$data    = $this->set_update_params( $data, 'insert' === $method, true, false );
 
-		$data = $this->set_update_params( $data, $method === 'insert', true, false );
 		list ( $_data, $_format ) = $this->filter( $data, $columns );
 
 		return $this->wpdb()->$method( $this->get_table( $table ), $_data, $_format );
@@ -562,9 +574,8 @@ class Db extends \WP_Framework_Db\Classes\Models\Db {
 	 *
 	 * @return bool|false|int
 	 */
-	/** @noinspection PhpUnusedPrivateMethodInspection */
 	private function insert( $table, array $data ) {
-		return $this->_insert_replace( $table, $data, 'insert' );
+		return $this->insert_or_replace( $table, $data, 'insert' );
 	}
 
 	/**
@@ -579,9 +590,8 @@ class Db extends \WP_Framework_Db\Classes\Models\Db {
 		if ( ! isset( $this->table_defines[ $table ] ) || empty( $fields ) || empty( $data_list ) ) {
 			return false;
 		}
-		$columns = $this->table_defines[ $table ]['columns'];
-		$table   = $this->get_table( $table );
-		/** @noinspection SqlResolve */
+		$columns     = $this->table_defines[ $table ]['columns'];
+		$table       = $this->get_table( $table );
 		$sql         = "INSERT INTO `{$table}` ";
 		$names       = [];
 		$placeholder = [];
@@ -598,12 +608,12 @@ class Db extends \WP_Framework_Db\Classes\Models\Db {
 			$placeholder[] = $columns[ $k ]['format'];
 		}
 		$placeholder = '(' . implode( ', ', $placeholder ) . ')';
-		$sql         .= '(' . implode( ', ', $names ) . ') VALUES ';
+		$sql         = $sql . '(' . implode( ', ', $names ) . ') VALUES ';
 
 		$values = [];
 		foreach ( $data_list as $data ) {
 			$data += $time;
-			if ( count( $names ) != count( $data ) ) {
+			if ( count( $names ) !== count( $data ) ) {
 				return false;
 			}
 
@@ -622,7 +632,7 @@ class Db extends \WP_Framework_Db\Classes\Models\Db {
 	 */
 	/** @noinspection PhpUnusedPrivateMethodInspection */
 	private function replace( $table, $data ) {
-		return $this->_insert_replace( $table, $data, 'replace' );
+		return $this->insert_or_replace( $table, $data, 'replace' );
 	}
 
 	/**
@@ -633,7 +643,6 @@ class Db extends \WP_Framework_Db\Classes\Models\Db {
 	 *
 	 * @return false|int
 	 */
-	/** @noinspection PhpUnusedPrivateMethodInspection */
 	private function update( $table, array $data, array $where, $delete = false ) {
 		if ( ! isset( $this->table_defines[ $table ] ) ) {
 			return false;
@@ -646,7 +655,9 @@ class Db extends \WP_Framework_Db\Classes\Models\Db {
 		}
 
 		$data = $this->set_update_params( $data, false, true, false );
+
 		list ( $_data, $_format ) = $this->filter( $data, $columns );
+
 		list ( $_where, $_where_format ) = $this->filter( $where, $columns );
 
 		return $this->wpdb()->update( $this->get_table( $table ), $_data, $_where, $_format, $_where_format );

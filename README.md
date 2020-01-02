@@ -1,10 +1,14 @@
 # WP Content Framework (DB module)
 
+[![CI Status](https://github.com/wp-content-framework/db/workflows/CI/badge.svg)](https://github.com/wp-content-framework/db/actions)
 [![License: GPL v2+](https://img.shields.io/badge/License-GPL%20v2%2B-blue.svg)](http://www.gnu.org/licenses/gpl-2.0.html)
 [![PHP: >=5.6](https://img.shields.io/badge/PHP-%3E%3D5.6-orange.svg)](http://php.net/)
 [![WordPress: >=3.9.3](https://img.shields.io/badge/WordPress-%3E%3D3.9.3-brightgreen.svg)](https://wordpress.org/)
 
 [WP Content Framework](https://github.com/wp-content-framework/core) のモジュールです。
+
+<!-- START doctoc -->
+<!-- END doctoc -->
 
 # 要件
 - PHP 5.6 以上
@@ -12,10 +16,10 @@
 
 # インストール
 
-``` composer require wp-content-framework/db ```  
+``` composer require wp-content-framework/db ```
 
 ## 基本設定
-- configs/config.php  
+- configs/config.php
 
 |設定値|説明|
 |---|---|
@@ -27,13 +31,13 @@
 ```
 // テーブル名 => 設定
 'test' => array(
-    
+
     // primary key 設定
     'id'      => 'test_id',     // optional [default = $table_name . '_id']
-    
+
     // カラム 設定
     'columns' => array(
-    
+
         // 論理名 => 設定
         'name'   => array(
             'name'     => 'name_test',     // optional (物理名)
@@ -58,30 +62,30 @@
             'comment' => 'bbb',
         ),
     ),
-    
+
     // index 設定
     'index'   => array(
         // key index
         'key'    => array(
             'name' => array( 'name' ),
         ),
-        
+
         // unique index
         'unique' => array(
             'value' => array( 'value1', 'value2' ),
         ),
     ),
-    
+
     // 論理削除 or 物理削除
     'delete'  => 'logical', // physical or logical [default = physical]
-    
+
     // コメント
     'comment' => 'test,
 ),
 ```
 
-プラグインのバージョンが変更されたとき またはキャッシュを削除することで 自動でテーブルの追加・更新が行われます。  
-default の途中変更に関しては文字列のみ対応しています。 [詳細](https://github.com/wp-content-framework/db/issues/25#issuecomment-492293617)  
+プラグインのバージョンが変更されたとき またはキャッシュを削除することで 自動でテーブルの追加・更新が行われます。
+default の途中変更に関しては文字列のみ対応しています。 [詳細](https://github.com/wp-content-framework/db/issues/25#issuecomment-492293617)
 データの取得・挿入・更新・削除はLaravelのDB操作と同じように行うことができます。
 ```
 // 取得
@@ -111,11 +115,11 @@ $this->table( 'test', 't' )
 $this->table( 'test' )
      ->where( 'value1', 'test1' )
      ->row();
- 
+
  // 取得（ID単体）
 $this->table( 'test' )
      ->find( 10 );
- 
+
 // 挿入
 $this->table( 'test' )
      ->insert( [
@@ -161,6 +165,5 @@ $this->table( 'test' )
 ```
 
 # Author
-
-[GitHub (Technote)](https://github.com/technote-space)  
-[Blog](https://technote.space)
+- [GitHub (Technote)](https://github.com/technote-space)
+- [Blog](https://technote.space)
