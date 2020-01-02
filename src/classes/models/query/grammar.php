@@ -20,6 +20,9 @@ if ( ! defined( 'WP_CONTENT_FRAMEWORK' ) ) {
 /**
  * Class Grammar
  * @package WP_Framework_Db\Classes\Models\Query
+ * @SuppressWarnings(PHPMD.ExcessiveClassLength)
+ * @SuppressWarnings(PHPMD.TooManyMethods)
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  */
 class Grammar extends \WP_Framework_Db\Classes\Models\Grammar {
 
@@ -71,8 +74,8 @@ class Grammar extends \WP_Framework_Db\Classes\Models\Grammar {
 		// see if that component exists. If it does we'll just call the compiler
 		// function for the component which is responsible for making the SQL.
 		$sql = trim( $this->concatenate(
-			$this->compile_components( $query ) )
-		);
+			$this->compile_components( $query )
+		) );
 
 		if ( $query->unions ) {
 			$sql = $this->wrap_union( $sql ) . ' ' . $this->compile_unions( $query );
@@ -122,7 +125,7 @@ class Grammar extends \WP_Framework_Db\Classes\Models\Grammar {
 		// If the query has a "distinct" constraint and we're not asking for all columns
 		// we need to prepend "distinct" onto the column name so that the query takes
 		// it into account when it performs the aggregating operations on the data.
-		if ( $query->distinct && $column !== '*' ) {
+		if ( $query->distinct && '*' !== $column ) {
 			$column = 'distinct ' . $column;
 		}
 
@@ -156,6 +159,7 @@ class Grammar extends \WP_Framework_Db\Classes\Models\Grammar {
 	 * @param string $table
 	 *
 	 * @return string
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter)
 	 */
 	protected function compile_from(
 		/** @noinspection PhpUnusedParameterInspection */
@@ -199,7 +203,8 @@ class Grammar extends \WP_Framework_Db\Classes\Models\Grammar {
 		// If we actually have some where clauses, we will strip off the first boolean
 		// operator, which is added by the query builders for convenience so we can
 		// avoid checking for the first clauses in each of the compilers methods.
-		if ( count( $sql = $this->compile_wheres_to_array( $query ) ) > 0 ) {
+		$sql = $this->compile_wheres_to_array( $query );
+		if ( count( $sql ) > 0 ) {
 			return $this->concatenate_where_clauses( $query, $sql );
 		}
 
@@ -240,6 +245,7 @@ class Grammar extends \WP_Framework_Db\Classes\Models\Grammar {
 	 * @param array $where
 	 *
 	 * @return string
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter)
 	 */
 	protected function where_raw(
 		/** @noinspection PhpUnusedParameterInspection */
@@ -255,6 +261,7 @@ class Grammar extends \WP_Framework_Db\Classes\Models\Grammar {
 	 * @param array $where
 	 *
 	 * @return string
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter)
 	 */
 	protected function where_basic(
 		/** @noinspection PhpUnusedParameterInspection */
@@ -272,6 +279,7 @@ class Grammar extends \WP_Framework_Db\Classes\Models\Grammar {
 	 * @param array $where
 	 *
 	 * @return string
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter)
 	 */
 	protected function where_in(
 		/** @noinspection PhpUnusedParameterInspection */
@@ -291,6 +299,7 @@ class Grammar extends \WP_Framework_Db\Classes\Models\Grammar {
 	 * @param array $where
 	 *
 	 * @return string
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter)
 	 */
 	protected function where_not_in(
 		/** @noinspection PhpUnusedParameterInspection */
@@ -312,6 +321,7 @@ class Grammar extends \WP_Framework_Db\Classes\Models\Grammar {
 	 * @param array $where
 	 *
 	 * @return string
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter)
 	 */
 	protected function where_not_in_raw(
 		/** @noinspection PhpUnusedParameterInspection */
@@ -333,6 +343,7 @@ class Grammar extends \WP_Framework_Db\Classes\Models\Grammar {
 	 * @param array $where
 	 *
 	 * @return string
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter)
 	 */
 	protected function where_in_raw(
 		/** @noinspection PhpUnusedParameterInspection */
@@ -352,6 +363,7 @@ class Grammar extends \WP_Framework_Db\Classes\Models\Grammar {
 	 * @param array $where
 	 *
 	 * @return string
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter)
 	 */
 	protected function where_null(
 		/** @noinspection PhpUnusedParameterInspection */
@@ -367,6 +379,7 @@ class Grammar extends \WP_Framework_Db\Classes\Models\Grammar {
 	 * @param array $where
 	 *
 	 * @return string
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter)
 	 */
 	protected function where_not_null(
 		/** @noinspection PhpUnusedParameterInspection */
@@ -382,6 +395,7 @@ class Grammar extends \WP_Framework_Db\Classes\Models\Grammar {
 	 * @param array $where
 	 *
 	 * @return string
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter)
 	 */
 	protected function where_between(
 		/** @noinspection PhpUnusedParameterInspection */
@@ -462,6 +476,7 @@ class Grammar extends \WP_Framework_Db\Classes\Models\Grammar {
 	 * @param array $where
 	 *
 	 * @return string
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter)
 	 */
 	protected function date_based_where(
 		/** @noinspection PhpUnusedParameterInspection */
@@ -479,6 +494,7 @@ class Grammar extends \WP_Framework_Db\Classes\Models\Grammar {
 	 * @param array $where
 	 *
 	 * @return string
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter)
 	 */
 	protected function where_column(
 		/** @noinspection PhpUnusedParameterInspection */
@@ -511,6 +527,7 @@ class Grammar extends \WP_Framework_Db\Classes\Models\Grammar {
 	 * @param array $where
 	 *
 	 * @return string
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter)
 	 */
 	protected function where_sub(
 		/** @noinspection PhpUnusedParameterInspection */
@@ -528,6 +545,7 @@ class Grammar extends \WP_Framework_Db\Classes\Models\Grammar {
 	 * @param array $where
 	 *
 	 * @return string
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter)
 	 */
 	protected function where_exists(
 		/** @noinspection PhpUnusedParameterInspection */
@@ -543,6 +561,7 @@ class Grammar extends \WP_Framework_Db\Classes\Models\Grammar {
 	 * @param array $where
 	 *
 	 * @return string
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter)
 	 */
 	protected function where_not_exists(
 		/** @noinspection PhpUnusedParameterInspection */
@@ -558,6 +577,7 @@ class Grammar extends \WP_Framework_Db\Classes\Models\Grammar {
 	 * @param array $where
 	 *
 	 * @return string
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter)
 	 */
 	protected function where_row_values(
 		/** @noinspection PhpUnusedParameterInspection */
@@ -576,6 +596,7 @@ class Grammar extends \WP_Framework_Db\Classes\Models\Grammar {
 	 * @param array $groups
 	 *
 	 * @return string
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter)
 	 */
 	protected function compile_groups(
 		/** @noinspection PhpUnusedParameterInspection */
@@ -591,6 +612,7 @@ class Grammar extends \WP_Framework_Db\Classes\Models\Grammar {
 	 * @param array $havings
 	 *
 	 * @return string
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter)
 	 */
 	protected function compile_havings(
 		/** @noinspection PhpUnusedParameterInspection */
@@ -612,9 +634,9 @@ class Grammar extends \WP_Framework_Db\Classes\Models\Grammar {
 		// If the having clause is "raw", we can just return the clause straight away
 		// without doing any more processing on it. Otherwise, we will compile the
 		// clause into SQL based on the components that make it up from builder.
-		if ( $having['type'] === 'raw' ) {
+		if ( 'raw' === $having['type'] ) {
 			return $having['boolean'] . ' ' . $having['sql'];
-		} elseif ( $having['type'] === 'between' ) {
+		} elseif ( 'between' === $having['type'] ) {
 			return $this->compile_having_between( $having );
 		}
 
@@ -674,6 +696,7 @@ class Grammar extends \WP_Framework_Db\Classes\Models\Grammar {
 	 * @param array $orders
 	 *
 	 * @return array
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter)
 	 */
 	protected function compile_orders_to_array(
 		/** @noinspection PhpUnusedParameterInspection */
@@ -704,6 +727,7 @@ class Grammar extends \WP_Framework_Db\Classes\Models\Grammar {
 	 * @param int $limit
 	 *
 	 * @return string
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter)
 	 */
 	protected function compile_limit(
 		/** @noinspection PhpUnusedParameterInspection */
@@ -720,10 +744,7 @@ class Grammar extends \WP_Framework_Db\Classes\Models\Grammar {
 	 *
 	 * @return string
 	 */
-	protected function compile_offset(
-		/** @noinspection PhpUnusedParameterInspection */
-		Builder $query, $offset
-	) {
+	protected function compile_offset( Builder $query, $offset ) {
 		if ( empty( $query->offset ) ) {
 			return '';
 		}
@@ -876,6 +897,7 @@ class Grammar extends \WP_Framework_Db\Classes\Models\Grammar {
 	 * @param array $values
 	 *
 	 * @return string
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter)
 	 */
 	protected function compile_update_columns( /** @noinspection PhpUnusedParameterInspection */ Builder $query, array $values ) {
 		return implode( ', ', $this->app->array->map( $values, function ( $value, $key ) {
@@ -1040,6 +1062,7 @@ class Grammar extends \WP_Framework_Db\Classes\Models\Grammar {
 	 * @param bool|string $value
 	 *
 	 * @return string
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter)
 	 */
 	protected function compile_lock(
 		/** @noinspection PhpUnusedParameterInspection */
@@ -1119,7 +1142,7 @@ class Grammar extends \WP_Framework_Db\Classes\Models\Grammar {
 			$value = $this->app->db->get_table( $value );
 		}
 
-		return $value === '*' ? $value : '`' . str_replace( '`', '``', $value ) . '`';
+		return '*' === $value ? $value : '`' . str_replace( '`', '``', $value ) . '`';
 	}
 
 	/**
@@ -1131,7 +1154,7 @@ class Grammar extends \WP_Framework_Db\Classes\Models\Grammar {
 	 */
 	protected function concatenate( $segments ) {
 		return implode( ' ', array_filter( $segments, function ( $value ) {
-			return (string) $value !== '';
+			return '' !== (string) $value;
 		} ) );
 	}
 

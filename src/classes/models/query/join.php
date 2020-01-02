@@ -115,6 +115,7 @@ class Join extends Builder {
 	 * @return $this
 	 *
 	 * @throws InvalidArgumentException
+	 * @SuppressWarnings(PHPMD.ShortMethodName)
 	 */
 	public function on( $first, $operator = null, $second = null, $boolean = 'and' ) {
 		if ( $first instanceof Closure ) {

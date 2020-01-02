@@ -115,7 +115,7 @@ abstract class Grammar {
 	 */
 	protected function wrap_segments( $segments, $is_table = false ) {
 		return implode( '.', $this->app->array->map( $segments, function ( $segment, $key ) use ( $segments, $is_table ) {
-			return $key == 0 && count( $segments ) > 1
+			return ! $key && count( $segments ) > 1
 				? $this->wrap_table( $segment )
 				: $this->wrap_value( $segment, $is_table );
 		} ) );
@@ -128,12 +128,13 @@ abstract class Grammar {
 	 * @param bool $is_table
 	 *
 	 * @return string
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter)
 	 */
 	protected function wrap_value(
 		/** @noinspection PhpUnusedParameterInspection */
 		$value, $is_table = false
 	) {
-		if ( $value !== '*' ) {
+		if ( '*' !== $value ) {
 			return '"' . str_replace( '"', '""', $value ) . '"';
 		}
 

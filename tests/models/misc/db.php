@@ -34,10 +34,10 @@ class Db extends \WP_Framework_Db\Classes\Models\Db {
 	 */
 	public function setup( $table, array $define ) {
 		$this->drop( $table );
-		list( $id, $columns ) = $this->setup_table_columns( $table, $define );
-		if ( $id ) {
+		list( $id_name, $columns ) = $this->setup_table_columns( $table, $define );
+		if ( $id_name ) {
 			$this->table_defines[ $table ]            = $define;
-			$this->table_defines[ $table ]['id']      = $id;
+			$this->table_defines[ $table ]['id']      = $id_name;
 			$this->table_defines[ $table ]['columns'] = $columns;
 		}
 	}
@@ -50,7 +50,7 @@ class Db extends \WP_Framework_Db\Classes\Models\Db {
 		global $wpdb;
 
 		$sql = 'DROP TABLE IF EXISTS `' . $this->get_table( $table ) . '`';
-		$wpdb->query( $sql );
+		$wpdb->query( $sql ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
 	}
 
 	/**
@@ -63,7 +63,7 @@ class Db extends \WP_Framework_Db\Classes\Models\Db {
 		global $wpdb;
 
 		$sql = 'SHOW TABLES LIKE \'' . $this->get_table( $table ) . '\'';
-		if ( $wpdb->get_var( $sql ) ) {
+		if ( $wpdb->get_var( $sql ) ) { // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
 			return true;
 		}
 
@@ -81,7 +81,7 @@ class Db extends \WP_Framework_Db\Classes\Models\Db {
 
 		$sql = 'DESCRIBE `' . $this->get_table( $table ) . '`';
 
-		return $wpdb->get_results( $sql, ARRAY_A );
+		return $wpdb->get_results( $sql, ARRAY_A ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
 	}
 
 	/**
@@ -89,7 +89,7 @@ class Db extends \WP_Framework_Db\Classes\Models\Db {
 	 *
 	 * @return array
 	 */
-	public function _table_update( $table ) {
+	public function wrap_table_update( $table ) {
 		return $this->table_update( $table, $this->table_defines[ $table ] );
 	}
 }

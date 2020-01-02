@@ -23,6 +23,7 @@ if ( ! defined( 'WP_CONTENT_FRAMEWORK' ) ) {
 /**
  * Class Db
  * @package WP_Framework_Db\Classes\Models
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  */
 class Db implements \WP_Framework_Core\Interfaces\Singleton, \WP_Framework_Core\Interfaces\Hook, \WP_Framework_Common\Interfaces\Uninstall {
 
@@ -34,35 +35,35 @@ class Db implements \WP_Framework_Core\Interfaces\Singleton, \WP_Framework_Core\
 	protected $table_defines = null;
 
 	/**
-	 * @var array $_type2format
+	 * @var array $type2format
 	 */
-	private static $_type2format = [];
+	private static $type2format = [];
 
 	/**
-	 * @var Exception $_error
+	 * @var Exception $error
 	 */
-	private $_error = null;
+	private $error = null;
 
 	/**
-	 * @var int $_transaction_level
+	 * @var int $transaction_level
 	 */
-	private $_transaction_level = 0;
+	private $transaction_level = 0;
 
 	/**
-	 * @var array $_managed_table_cache
+	 * @var array $table_name_cache
 	 */
-	private $_table_name_cache = [];
+	private $table_name_cache = [];
 
 	/**
-	 * @var int $_blog_id
+	 * @var int $blog_id
 	 */
-	private $_blog_id;
+	private $blog_id;
 
 	/**
 	 * initialize
 	 */
 	protected function initialize() {
-		$this->_blog_id = $this->app->define->blog_id;
+		$this->blog_id = $this->app->define->blog_id;
 		$this->load_table_defines();
 		$this->db_update();
 		$this->setup_wp_table_defines();
@@ -77,7 +78,7 @@ class Db implements \WP_Framework_Core\Interfaces\Singleton, \WP_Framework_Core\
 	 * @return string
 	 */
 	private function type2format( $type ) {
-		if ( ! isset( self::$_type2format[ $type ] ) ) {
+		if ( ! array_key_exists( $type, self::$type2format ) ) {
 			$format = '%s';
 			switch ( true ) {
 				case stristr( $type, 'INT' ) !== false:
@@ -92,10 +93,10 @@ class Db implements \WP_Framework_Core\Interfaces\Singleton, \WP_Framework_Core\
 					$format = '%f';
 					break;
 			}
-			self::$_type2format[ $type ] = $this->apply_filters( 'type2format', $format, $type );
+			self::$type2format[ $type ] = $this->apply_filters( 'type2format', $format, $type );
 		}
 
-		return self::$_type2format[ $type ];
+		return self::$type2format[ $type ];
 	}
 
 	/**
@@ -109,8 +110,10 @@ class Db implements \WP_Framework_Core\Interfaces\Singleton, \WP_Framework_Core\
 			return;
 		}
 
-		$this->table_defines                                   = $this->app->config->load( 'db' );
-		empty( $this->table_defines ) and $this->table_defines = [];
+		$this->table_defines = $this->app->config->load( 'db' );
+		if ( empty( $this->table_defines ) ) {
+			$this->table_defines = [];
+		}
 		$added_tables = $this->app->option->get_grouped( 'added_tables', 'db', [] );
 
 		foreach ( $this->table_defines as $table => $define ) {
@@ -133,7 +136,7 @@ class Db implements \WP_Framework_Core\Interfaces\Singleton, \WP_Framework_Core\
 	 * @param int $new_blog
 	 */
 	private function switch_blog( $new_blog ) {
-		if ( $new_blog === $this->_blog_id ) {
+		if ( $new_blog === $this->blog_id ) {
 			return;
 		}
 
@@ -143,7 +146,7 @@ class Db implements \WP_Framework_Core\Interfaces\Singleton, \WP_Framework_Core\
 			}
 		}
 		$this->setup_wp_table_defines();
-		$this->_blog_id = $new_blog;
+		$this->blog_id = $new_blog;
 	}
 
 	/**
@@ -167,19 +170,19 @@ class Db implements \WP_Framework_Core\Interfaces\Singleton, \WP_Framework_Core\
 			} else {
 				$changed      = true;
 				$sql          = "DESCRIBE $table";
-				$columns      = $this->wpdb()->get_results( $sql, ARRAY_A );
+				$columns      = $this->wpdb()->get_results( $sql, ARRAY_A ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
 				$table_define = [];
 				foreach ( $columns as $column ) {
 					$name = $column['Field'];
 					$key  = $name;
-					if ( isset( $column['Key'] ) && $column['Key'] === 'PRI' ) {
+					if ( isset( $column['Key'] ) && 'PRI' === $column['Key'] ) {
 						$key                = 'id';
 						$table_define['id'] = $name;
 					}
 					$type     = explode( ' ', $column['Type'] );
-					$unsigned = in_array( 'unsigned', $type );
+					$unsigned = in_array( 'unsigned', $type, true );
 					$type     = reset( $type );
-					$null     = $column['Null'] != 'NO';
+					$null     = 'NO' !== $column['Null'];
 
 					$table_define['columns'][ $key ] = [
 						'name'     => $name,
@@ -189,6 +192,7 @@ class Db implements \WP_Framework_Core\Interfaces\Singleton, \WP_Framework_Core\
 						'null'     => $null,
 					];
 				}
+
 				$table_define['delete']    = 'physical';
 				$table_define['wordpress'] = true;
 				$cache[ $table ]           = $table_define;
@@ -205,6 +209,8 @@ class Db implements \WP_Framework_Core\Interfaces\Singleton, \WP_Framework_Core\
 	 * @param array $define
 	 *
 	 * @return array
+	 * @SuppressWarnings(PHPMD.NPathComplexity)
+	 * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
 	 */
 	protected function setup_table_columns( $table, array $define ) {
 		if ( empty( $define['columns'] ) ) {
@@ -231,6 +237,7 @@ class Db implements \WP_Framework_Core\Interfaces\Singleton, \WP_Framework_Core\
 				$check = false;
 				break;
 			}
+
 			$type = trim( $this->app->array->get( $column, 'type' ) );
 			if ( empty( $type ) ) {
 				$check = false;
@@ -242,13 +249,17 @@ class Db implements \WP_Framework_Core\Interfaces\Singleton, \WP_Framework_Core\
 				return $this->type2format( $type );
 			} );
 			$column['length'] = null;
+
+			$matches = null;
 			if ( preg_match( '/\(\s*(\d+)\s*\)/', $type, $matches ) ) {
 				$column['length'] = $matches[1] - 0;
 			}
+
 			$column['is_user_defined'] = true;
 			if ( ! empty( $column['comment'] ) ) {
 				$column['comment'] = $this->translate( $column['comment'] );
 			}
+
 			$columns[ $key ] = $column;
 		}
 		if ( ! $check ) {
@@ -337,7 +348,7 @@ class Db implements \WP_Framework_Core\Interfaces\Singleton, \WP_Framework_Core\
 	 */
 	public function get_table_name( $value ) {
 		$value = trim( $value );
-		if ( ! isset( $this->_table_name_cache[ $value ] ) ) {
+		if ( ! isset( $this->table_name_cache[ $value ] ) ) {
 			$_value = $value;
 			$as     = null;
 			if ( stripos( $_value, ' as ' ) !== false ) {
@@ -345,12 +356,14 @@ class Db implements \WP_Framework_Core\Interfaces\Singleton, \WP_Framework_Core\
 				$_value   = $segments[0];
 				$as       = $this->unwrap( $segments[1] );
 			}
-			$_value                            = $this->unwrap( explode( '.', $_value )[0] );
-			empty( $as ) and $as               = $_value;
-			$this->_table_name_cache[ $value ] = [ $_value, $as ];
+			$_value = $this->unwrap( explode( '.', $_value )[0] );
+			if ( empty( $as ) ) {
+				$as = $_value;
+			}
+			$this->table_name_cache[ $value ] = [ $_value, $as ];
 		}
 
-		return $this->_table_name_cache[ $value ];
+		return $this->table_name_cache[ $value ];
 	}
 
 	/**
@@ -439,6 +452,8 @@ class Db implements \WP_Framework_Core\Interfaces\Singleton, \WP_Framework_Core\
 	 * @param array $define
 	 *
 	 * @return array
+	 * @SuppressWarnings(PHPMD.NPathComplexity)
+	 * @SuppressWarnings(PHPMD.CyclomaticComplexity)
 	 */
 	protected function table_update( $table, array $define ) {
 		require_once ABSPATH . 'wp-admin' . DS . 'includes' . DS . 'upgrade.php';
@@ -465,7 +480,7 @@ class Db implements \WP_Framework_Core\Interfaces\Singleton, \WP_Framework_Core\
 			} else {
 				$sql .= ' NOT NULL';
 			}
-			if ( $key === 'id' ) {
+			if ( 'id' === $key ) {
 				$sql .= ' AUTO_INCREMENT';
 			} elseif ( $this->app->array->exists( $column, 'default' ) ) {
 				$default = $this->app->array->get( $column, 'default' );
@@ -473,17 +488,17 @@ class Db implements \WP_Framework_Core\Interfaces\Singleton, \WP_Framework_Core\
 					if ( is_bool( $default ) ) {
 						$default = (int) $default;
 					} else {
-						$default = var_export( $default, true );
+						$default = var_export( $default, true ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_var_export
 					}
 					$sql .= " DEFAULT {$default}";
 				} else {
 					$default = str_replace( '\'', '\\\'', $default );
-					$sql    .= " DEFAULT '{$default}'";
+					$sql     = $sql . " DEFAULT '{$default}'";
 				}
 			}
 			if ( ! empty( $comment ) ) {
 				$comment = str_replace( '\'', '\\\'', $comment );
-				$sql    .= " COMMENT '{$comment}'";
+				$sql     = $sql . " COMMENT '{$comment}'";
 			}
 			$sql .= ",\n";
 		}
@@ -512,7 +527,7 @@ class Db implements \WP_Framework_Core\Interfaces\Singleton, \WP_Framework_Core\
 		$sql .= "\n) ENGINE = InnoDB DEFAULT CHARSET = {$char}";
 		if ( ! empty( $define['comment'] ) ) {
 			$define['comment'] = str_replace( '\'', '\\\'', $define['comment'] );
-			$sql              .= " COMMENT '{$define['comment']}'";
+			$sql               = $sql . " COMMENT '{$define['comment']}'";
 		}
 		$sql .= ';';
 
@@ -525,9 +540,13 @@ class Db implements \WP_Framework_Core\Interfaces\Singleton, \WP_Framework_Core\
 	 * @return bool
 	 */
 	protected function is_logical( array $define ) {
-		return $this->apply_filters( 'is_logical', 'physical' !== $this->app->array->get( $define, 'delete', function () {
+		return $this->apply_filters(
+			'is_logical',
+			'physical' !== $this->app->array->get( $define, 'delete', function () {
 				return $this->app->get_config( 'config', 'default_delete_rule' );
-		} ), $define );
+			} ),
+			$define
+		);
 	}
 
 	/**
@@ -618,7 +637,7 @@ class Db implements \WP_Framework_Core\Interfaces\Singleton, \WP_Framework_Core\
 	 * @return Exception|null
 	 */
 	public function get_last_transaction_error() {
-		return $this->_error;
+		return $this->error;
 	}
 
 	/**
@@ -628,7 +647,7 @@ class Db implements \WP_Framework_Core\Interfaces\Singleton, \WP_Framework_Core\
 	 * @return string
 	 */
 	public function prepare( $sql, array $values ) {
-		return empty( $values ) ? $sql : $this->wpdb()->prepare( $sql, $values );
+		return empty( $values ) ? $sql : $this->wpdb()->prepare( $sql, $values ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
 	}
 
 	/**
@@ -637,7 +656,7 @@ class Db implements \WP_Framework_Core\Interfaces\Singleton, \WP_Framework_Core\
 	 * @return false|int
 	 */
 	protected function query( $sql ) {
-		return $this->wpdb()->query( $sql );
+		return $this->wpdb()->query( $sql ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
 	}
 
 	/**
@@ -667,10 +686,10 @@ class Db implements \WP_Framework_Core\Interfaces\Singleton, \WP_Framework_Core\
 	 * @return bool
 	 */
 	public function transaction( callable $func ) {
-		$level = $this->_transaction_level;
-		$this->_transaction_level++;
-		if ( $level === 0 ) {
-			$this->_error = null;
+		$level = $this->transaction_level;
+		$this->transaction_level++;
+		if ( 0 === $level ) {
+			$this->error = null;
 			try {
 				$this->begin();
 				$func();
@@ -680,9 +699,9 @@ class Db implements \WP_Framework_Core\Interfaces\Singleton, \WP_Framework_Core\
 			} catch ( Exception $e ) {
 				$this->rollback();
 				$this->app->log( $e );
-				$this->_error = $e;
+				$this->error = $e;
 			} finally {
-				$this->_transaction_level = $level;
+				$this->transaction_level = $level;
 			}
 		} else {
 			try {
@@ -690,7 +709,7 @@ class Db implements \WP_Framework_Core\Interfaces\Singleton, \WP_Framework_Core\
 
 				return true;
 			} finally {
-				$this->_transaction_level = $level;
+				$this->transaction_level = $level;
 			}
 		}
 
@@ -703,7 +722,7 @@ class Db implements \WP_Framework_Core\Interfaces\Singleton, \WP_Framework_Core\
 	public function performance_report() {
 		$queries = Connection::queries( $this->app->plugin_name );
 		if ( false !== $queries ) {
-			error_log( '' );
+			error_log( '' ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
 
 			$count   = $this->app->array->sum( $queries, function ( $item ) {
 				return count( $item['execute'] );
@@ -713,17 +732,17 @@ class Db implements \WP_Framework_Core\Interfaces\Singleton, \WP_Framework_Core\
 			} );
 			$message = sprintf( 'total = %2d, elapsed = %12.8fms', $count, $elapsed );
 
-			error_log( "{$this->app->plugin_name} :  {$message}" );
+			error_log( "{$this->app->plugin_name} :  {$message}" ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
 			foreach ( $queries as $query ) {
 				$elapsed = array_sum( $query['execute'] );
 				$count   = count( $query['execute'] );
 				$message = sprintf( 'total = %2d, elapsed = %12.8fms', $count, $elapsed );
-				error_log( "  {$message} : {$query['query']}" );
+				error_log( "  {$message} : {$query['query']}" ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
 				foreach ( $query['execute'] as $item ) {
-					error_log( sprintf( '      %12.8fms', $item ) );
+					error_log( sprintf( '      %12.8fms', $item ) ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
 				}
 			}
-			error_log( '' );
+			error_log( '' ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
 		}
 	}
 
