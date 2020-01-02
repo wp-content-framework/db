@@ -84,9 +84,10 @@
 ),
 ```
 
-プラグインのバージョンが変更されたとき またはキャッシュを削除することで 自動でテーブルの追加・更新が行われます。
-default の途中変更に関しては文字列のみ対応しています。 [詳細](https://github.com/wp-content-framework/db/issues/25#issuecomment-492293617)
+プラグインのバージョンが変更されたとき またはキャッシュを削除することで 自動でテーブルの追加・更新が行われます。  
+default の途中変更に関しては文字列のみ対応しています。 [詳細](https://github.com/wp-content-framework/db/issues/25#issuecomment-492293617)  
 データの取得・挿入・更新・削除はLaravelのDB操作と同じように行うことができます。
+
 ```
 // 取得
 $this->table( 'test' )
