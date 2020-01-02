@@ -7,6 +7,9 @@
 
 [WP Content Framework](https://github.com/wp-content-framework/core) のモジュールです。
 
+<!-- START doctoc -->
+<!-- END doctoc -->
+
 # 要件
 - PHP 5.6 以上
 - WordPress 3.9.3 以上
