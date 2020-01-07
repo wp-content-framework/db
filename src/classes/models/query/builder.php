@@ -369,7 +369,7 @@ class Builder {
 			$value = $value->get_value();
 		}
 
-		return sha1( wp_json_encode( $value ) );
+		return sha1( $this->app->utility->json_encode( $value ) );
 	}
 
 	/**
